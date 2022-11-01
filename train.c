@@ -48,7 +48,10 @@ void data_init(data_t* d, const char* file) {
   free(line);
   fclose(fp);
 
-  d->X = X;
+  cudaMalloc((void**)&d->X, N*P*sizeof(float));
+  cudaMemcpy(d->X, X, N*P*sizeof(float), cudaMemcpyHostToDevice);
+  free(X);
+
   d->N = N;
   d->P = P;
 }
@@ -59,7 +62,7 @@ void data_init(data_t* d, const char* file) {
  * @param d Data to destroy.
  */
 void data_term(struct data_t* d) {
-  free(d->X);
+  cudaFree(d->X);
   
   d->X = NULL;
   d->N = 0;
@@ -133,6 +136,11 @@ int main(const int argc, const char *argv[]) {
   /* initialize cuBLAS */
   cublasHandle_t handle;
   cublasCreate(&handle);
+  float value = 1.0f;
+  float* one;
+  cudaMalloc((void**)&one, sizeof(float));
+  cublasSetVector(1, sizeof(float), &value, 1, one, 1);
+  cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
   /* initialize cuRAND */
   curandGenerator_t gen;
@@ -146,8 +154,8 @@ int main(const int argc, const char *argv[]) {
   /* initialize model */
   int P = d.P;
   int B = 64;
-  int L = 4;
-  int U[] = {10, 64, 64, 64, 2};
+  int L = 3;
+  int U[] = {256, 256, 2};
   model_t m;
   model_init(&m, P, B, L, U);
 
@@ -159,11 +167,26 @@ int main(const int argc, const char *argv[]) {
     prev = U[l];
   }
 
+  /* forward pass */
+  prev = P;
+  float* X = d.X;
+  for (int l = 0; l < L; ++l) {
+    cublasSetMatrix(m.U[l], m.B, sizeof(float), m.b[l], 0, m.Z[l], m.U[l]);
+    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m.U[l], m.B, prev, one,
+        m.W[l], m.U[l], X, prev, one, m.Z[l], m.U[l]);
+    if (l < L - 1) {
+      //rectify(m.Z[l], m.U[l], m.B);
+    }
+    X = m.Z[l];
+    prev = U[l];
+  }
+
   /* clean up */
   model_term(&m);
   data_term(&d);
   curandDestroyGenerator(gen);
   cublasDestroy(handle);
+  cudaFree(one);
 
   return 0;
 }
