@@ -1,6 +1,9 @@
 #include <train.h>
 
 #include <cuda_runtime.h>
+#include <cublas_v2.h>
+#include <curand.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -126,8 +129,24 @@ void model_term(struct model_t* m) {
   m->U = NULL;
 }
 
+void forward(const struct data_t* d, struct model_t* m) {
+  for (int l = 0; l < m->L; ++l) {
+    //bias(m->Z[l + 1], m->U[l + 1], m->B);
+    //gemm(m->W[l], m->Z[l], m->Z[l + 1], m->U[l + 1], m->B, m->U[l]);
+    //rect(m->Z[l + 1], m->U[l + 1], m->B);
+  }
+}
 
 int main(const int argc, const char *argv[]) {
+  /* initialize cuBLAS */
+  cublasHandle_t handle;
+  cublasCreate(&handle);
+
+  /* initialize cuRAND */
+  curandGenerator_t gen;
+  curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT);
+  curandSetPseudoRandomGeneratorSeed(gen, 0);
+
   /* initialize data */
   data_t d;
   data_init(&d, "bikeshare.csv");
@@ -143,6 +162,8 @@ int main(const int argc, const char *argv[]) {
   /* clean up */
   model_term(&m);
   data_term(&d);
+  curandDestroyGenerator(gen);
+  cublasDestroy(handle);
 
   return 0;
 }
