@@ -16,6 +16,7 @@ typedef struct data_t {
    * Number of features.
    */
   int P;
+
 } data_t;
 
 /**
@@ -28,14 +29,24 @@ typedef struct model_t {
   float** W;
 
   /**
-   * Layer activations.
-   */
-  float** Z;
-
-  /**
    * Gradients of layer weights.
    */
   float** dW;
+
+  /**
+   * Layer biases.
+   */
+  float** b;
+
+  /**
+   * Gradients of biases.
+   */
+  float** db;
+
+  /**
+   * Layer activations.
+   */
+  float** Z;
 
   /**
    * Gradients of layer activations.
@@ -48,9 +59,14 @@ typedef struct model_t {
   float* y;
 
   /**
-   * Layer widths.
+   * Input size.
    */
-  const int* U;
+  int P;
+
+  /**
+   * Batch size.
+   */
+  int B;
 
   /**
    * Number of layers.
@@ -58,7 +74,8 @@ typedef struct model_t {
   int L;
 
   /**
-   * Batch size.
+   * Layer widths.
    */
-  int B;
-} struct_t;
+  const int* U;
+
+} model_t;
