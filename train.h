@@ -1,69 +1,64 @@
 /**
  * Data.
  */
-struct data_t {
+typedef struct data_t {
   /**
-   * Inputs.
+   * Buffer.
    */
-  float* X = NULL;
-
-  /**
-   * Outputs.
-   */
-  float* y = NULL;
+  float* X;
 
   /**
    * Number of data points.
    */
-  int N = 0;
+  int N;
 
   /**
    * Number of features.
    */
-  int P = 0;
-};
+  int P;
+} data_t;
 
 /**
  * Model.
  */
-struct model_t {
+typedef struct model_t {
   /**
    * Layer weights.
    */
-  float** W = NULL;
+  float** W;
 
   /**
    * Layer activations.
    */
-  float** Z = NULL;
+  float** Z;
 
   /**
    * Gradients of layer weights.
    */
-  float** dW = NULL;
+  float** dW;
 
   /**
    * Gradients of layer activations.
    */
-  float** dZ = NULL;
+  float** dZ;
 
   /**
    * Observations.
    */
-  float* y = NULL;
+  float* y;
 
   /**
    * Layer widths.
    */
-  const int* U = NULL;
+  const int* U;
 
   /**
    * Number of layers.
    */
-  int L = 0;
+  int L;
 
   /**
    * Batch size.
    */
-  int B = 0;
-};
+  int B;
+} struct_t;
