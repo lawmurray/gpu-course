@@ -1,25 +1,4 @@
 /**
- * Data.
- */
-typedef struct data_t {
-  /**
-   * Buffer.
-   */
-  float* X;
-
-  /**
-   * Number of data points.
-   */
-  int N;
-
-  /**
-   * Number of features.
-   */
-  int P;
-
-} data_t;
-
-/**
  * Model.
  */
 typedef struct model_t {
@@ -79,3 +58,22 @@ typedef struct model_t {
   const int* U;
 
 } model_t;
+
+/**
+ * Allocate and initialize model.
+ *
+ * @param m Model to initialize.
+ * @param P Input size.
+ * @param B Batch size.
+ * @param L Number of layers.
+ * @param U Layer widths. Should be an array of size @p L.
+ */
+void model_init(model_t* m, const int P, const int B, const int L,
+    const int* U);
+
+/**
+ * Destroy and deallocate model.
+ * 
+ * @param d Model to destroy.
+ */
+void model_term(model_t* m);
