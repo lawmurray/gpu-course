@@ -17,7 +17,6 @@ int main(const int argc, const char *argv[]) {
   int U[] = {256, 256, 2};
   model_t m;
   model_init(&m, P, B, L, U);
-
   model_forward(&m, d.X);
   model_backward(&m, d.X);
 

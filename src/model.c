@@ -1,7 +1,6 @@
 #include <model.h>
 #include <init.h>
-
-#include <cuda_runtime.h>
+#include <function.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,7 +82,7 @@ void model_forward(model_t* m, float* X) {
   cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, U[0], B, P, scalar1, W[0],
       U[0], X, P, scalar1, Z[0], U[0]);
   for (int l = 1; l < L; ++l) {
-    //rectify(Z[l - 1], U[l - 1], B);
+    rectify(U[l - 1], B, Z[l - 1], U[l - 1]);
     cublasSetMatrix(U[l], B, sizeof(float), b[l], 0, Z[l], U[l]);
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, U[l], B, U[l - 1], scalar1,
         W[l], U[l], Z[l - 1], U[l - 1], scalar1, Z[l], U[l]);
@@ -104,7 +103,7 @@ void model_backward(model_t* m, float* y) {
   for (int l = L - 2; l >= 0; --l) {
     cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, U[l], B, U[l + 1], scalar1,
         W[l + 1], U[l + 1], dZ[l + 1], U[l + 1], scalar0, dZ[l], U[l]);
-    //rectify_grad(dZ[l], Z[l], U[l], B);
+    rectify_grad(U[l], B, Z[l], U[l], dZ[l], U[l]);
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, U[l], U[l - 1], B, scalar1,
         dZ[l], U[l], Z[l - 1], U[l - 1], scalar0, dW[l], U[l]);
     cublasSgemv(handle, CUBLAS_OP_N, U[l], B, scalar1, dZ[l], U[l], scalar1,

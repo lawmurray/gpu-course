@@ -1,6 +1,6 @@
 CFLAGS=-Isrc -O3
 
-main: src/main.o src/model.o src/data.o src/init.o
+main: src/main.o src/model.o src/data.o src/init.o src/function.o
 	nvcc $(CFLAGS) -o $@ $^ -lcublas -lcurand
 
 %.o : %.cu
