@@ -74,6 +74,22 @@ void model_init(model_t* m, const int P, const int B, const int L,
 /**
  * Destroy and deallocate model.
  * 
- * @param d Model to destroy.
+ * @param m Model to destroy.
  */
 void model_term(model_t* m);
+
+/**
+ * Perform forward pass.
+ * 
+ * @param m Model.
+ * @param X Input.
+ */
+void model_forward(model_t* m, float* X);
+
+/**
+ * Perform backward pass.
+ * 
+ * @param m Model.
+ * @param y Output.
+ */
+void model_backward(model_t* m, float* y);

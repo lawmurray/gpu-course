@@ -1,10 +1,10 @@
-CFLAGS=-Isrc
+CFLAGS=-Isrc -O3
 
-main: src/main.o src/model.o src/data.o src/aux.o
-	nvcc -O3 -lcublas -lcurand -o $@ $^
+main: src/main.o src/model.o src/data.o src/init.o
+	nvcc $(CFLAGS) -o $@ $^ -lcublas -lcurand
 
 %.o : %.cu
-	nvcc -O3 -c -o $@ $^
+	nvcc $(CFLAGS) -c -o $@ $^
 
 clean:
 	rm -f src/*.o main
