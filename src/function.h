@@ -29,10 +29,11 @@ void rectify_grad(int U, int B, const float* Z, int ldZ, float* dZ, int lddZ);
  * @param incy Stride between elements of @p y (increment).
  * @param Z Matrix where rows index units, columns index batch members.
  * @param ldZ Stride between columns of @p Z (lead).
- * @param[out] L Log-likelihood.
+ * @param[out] ll Log-likelihood.
+ * @param incll Stride between elements of @p ll (increment).
  */
 void log_likelihood(int B, const float* y, int incy, const float* Z, int ldZ,
-    float* logl);
+    float* ll, int incll);
 
 /**
  * Gradient of log-likelihood.

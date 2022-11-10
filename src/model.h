@@ -38,6 +38,11 @@ typedef struct model_t {
   float* y;
 
   /**
+   * Log-likelihoods.
+   */
+  float* ll;
+
+  /**
    * Input size.
    */
   int P;

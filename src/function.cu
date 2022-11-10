@@ -19,13 +19,13 @@ __global__ void kernel_rectify_grad(int U, int B, const float* Z, int ldZ,
 }
 
 __global__ void kernel_log_likelihood(int B, const float* y, int incy,
-    const float* Z, int ldZ, float* l, int incl) {
+    const float* Z, int ldZ, float* ll, int incll) {
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
     float mu = Z[j*ldZ];
     float sigma = fabsf(Z[j*ldZ + 1]);
     float z = (y[j*incy] - mu)/sigma;
-    l[j*incl] = logf(2.0f/sqrtf(2.0f*pi)) - 0.5f*z*z - logf(sigma) -
+    ll[j*incll] = logf(2.0f/sqrtf(2.0f*pi)) - 0.5f*z*z - logf(sigma) -
         logf(erfcf(z/sqrtf(2.0f)));
   }
 }
@@ -50,26 +50,26 @@ __global__ void kernel_log_likelihood_grad(int B, const float* y, int incy,
 extern "C" void rectify(int U, int B, float* Z, int ldZ) {
   dim3 block(32, 16);
   dim3 grid((U + block.x - 1)/block.x, (B + block.y - 1)/block.y);
-  kernel_rectify<<<grid, block>>>(U, B, Z, ldZ);
+  kernel_rectify<<<grid,block>>>(U, B, Z, ldZ);
 }
 
 extern "C" void rectify_grad(int U, int B, const float* Z, int ldZ, float* dZ,
     int lddZ) {
   dim3 block(32, 16);
   dim3 grid((U + block.x - 1)/block.x, (B + block.y - 1)/block.y);
-  kernel_rectify_grad<<<grid, block>>>(U, B, Z, ldZ, dZ, lddZ);
+  kernel_rectify_grad<<<grid,block>>>(U, B, Z, ldZ, dZ, lddZ);
 }
 
 extern "C" void log_likelihood(int B, const float* y, int incy,
-    const float* Z, int ldZ, float* l, int incl) {
+    const float* Z, int ldZ, float* ll, int incll) {
   dim3 block(2, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
-  kernel_log_likelihood<<<grid, block>>>(B, y, incy, Z, ldZ, l, 1);
+  kernel_log_likelihood<<<grid,block>>>(B, y, incy, Z, ldZ, ll, incll);
 }
 
 extern "C" void log_likelihood_grad(int B, const float* y, int incy,
     const float* Z, int ldZ, float* dZ, int lddZ) {
   dim3 block(2, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
-  kernel_log_likelihood<<<grid, block>>>(B, y, incy, Z, ldZ, dZ, lddZ);
+  kernel_log_likelihood<<<grid,block>>>(B, y, incy, Z, ldZ, dZ, lddZ);
 }

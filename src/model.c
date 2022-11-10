@@ -14,6 +14,7 @@ void model_init(model_t* m, const int P, const int B, const int L,
   float** db = (float**)malloc(L*sizeof(float*));
   float** Z = (float**)malloc(L*sizeof(float*));
   float** dZ = (float**)malloc(L*sizeof(float*));
+  float* ll = NULL;
 
   int prev = P;  // previous layer width
   for (int l = 0; l < L; ++l) {
@@ -25,6 +26,7 @@ void model_init(model_t* m, const int P, const int B, const int L,
     cudaMalloc((void**)&dZ[l], U[l]*B*sizeof(float));
     prev = U[l];
   }
+  cudaMalloc((void**)&ll, B*sizeof(float)); 
 
   /* initialize parameters */
   curandGenerateNormal(gen, W[0], U[0]*P, 0.0f, sqrtf(1.0f/P));
@@ -40,6 +42,7 @@ void model_init(model_t* m, const int P, const int B, const int L,
   m->db = db;
   m->Z = Z;
   m->dZ = dZ;
+  m->ll = ll;
   m->P = P;
   m->B = B;
   m->L = L;
@@ -62,7 +65,15 @@ void model_term(model_t* m) {
   free(m->db);
   free(m->Z);
   free(m->dZ);
+  free(m->ll);
 
+  m->W = NULL;
+  m->dW = NULL;
+  m->b = NULL;
+  m->db = NULL;
+  m->Z = NULL;
+  m->dZ = NULL;
+  m->ll = NULL;
   m->P = 0;
   m->B = 0;
   m->L = 0;
@@ -73,10 +84,12 @@ void model_forward(model_t* m, float* X) {
   float** W = m->W;
   float** b = m->b;
   float** Z = m->Z;
+  float* ll = m->ll;
   int P = m->P;
   int B = m->B;
   int L = m->L;
   const int* U = m->U;
+  float* y = X + P - 1;
 
   cublasSetMatrix(U[0], B, sizeof(float), b[0], 0, Z[0], U[0]);
   cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, U[0], B, P, scalar1, W[0],
@@ -87,6 +100,7 @@ void model_forward(model_t* m, float* X) {
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, U[l], B, U[l - 1], scalar1,
         W[l], U[l], Z[l - 1], U[l - 1], scalar1, Z[l], U[l]);
   }
+  log_likelihood(B, y, P, Z[L - 1], U[L - 1], ll, 1);
 }
 
 void model_backward(model_t* m, float* y) {
@@ -109,5 +123,5 @@ void model_backward(model_t* m, float* y) {
     cublasSgemv(handle, CUBLAS_OP_N, U[l], B, scalar1, dZ[l], U[l], scalar1,
         0, scalar0, db[l], 1);
   }
-
+  log_likelihood_grad(B, y, P, Z[L - 1], U[L - 1], dZ[L - 1], U[L - 1]);
 }
