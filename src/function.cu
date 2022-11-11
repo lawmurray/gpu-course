@@ -61,10 +61,10 @@ extern "C" void rectify_grad(int U, int B, const float* Z, int ldZ, float* dZ,
 }
 
 extern "C" void log_likelihood(int B, const float* y, int incy,
-    const float* Z, int ldZ, float* ll, int incll) {
+    const float* Z, int ldZ, float* l, int incl) {
   dim3 block(2, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
-  kernel_log_likelihood<<<grid,block>>>(B, y, incy, Z, ldZ, ll, incll);
+  kernel_log_likelihood<<<grid,block>>>(B, y, incy, Z, ldZ, l, incl);
 }
 
 extern "C" void log_likelihood_grad(int B, const float* y, int incy,

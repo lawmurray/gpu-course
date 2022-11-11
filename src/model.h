@@ -38,7 +38,12 @@ typedef struct model_t {
   float* y;
 
   /**
-   * Log-likelihoods.
+   * Batch log-likelihoods.
+   */
+  float* l;
+
+  /**
+   * Sum of log-likelihoods.
    */
   float* ll;
 
