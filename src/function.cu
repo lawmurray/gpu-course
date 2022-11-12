@@ -47,6 +47,19 @@ __global__ void kernel_log_likelihood_grad(int B, const float* y, int incy,
   }
 }
 
+__global__ void kernel_adam(const int P, const int t, const float gamma,
+    const float beta1, const float beta2, const float epsilon, float* m,
+    float* v, float* theta, float* dtheta) {
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
+  if (i < P) {
+    m[i] = beta1*m[i] + (1.0f - beta1)*-dtheta[i];
+    v[i] = beta2*v[i] + (1.0f - beta2)*dtheta[i]*dtheta[i];
+    float mhat = m[i]/(1.0f - powf(beta1, t));
+    float vhat = v[i]/(1.0f - powf(beta2, t));
+    theta[i] = theta[i] - gamma*mhat/(sqrtf(vhat) + epsilon);
+  }
+}
+
 extern "C" void rectify(int U, int B, float* Z, int ldZ) {
   dim3 block(32, 16);
   dim3 grid((U + block.x - 1)/block.x, (B + block.y - 1)/block.y);
@@ -72,4 +85,13 @@ extern "C" void log_likelihood_grad(int B, const float* y, int incy,
   dim3 block(2, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
   kernel_log_likelihood<<<grid,block>>>(B, y, incy, Z, ldZ, dZ, lddZ);
+}
+
+extern "C" void adam(const int P, const int t, const float gamma,
+    const float beta1, const float beta2, const float epsilon, float* m,
+    float* v, float* theta, float* dtheta) {
+  dim3 block(256);
+  dim3 grid((P + block.x - 1)/block.x);
+  kernel_adam<<<grid,block>>>(P, t, gamma, beta1, beta2, epsilon, m, v, theta,
+      dtheta);
 }

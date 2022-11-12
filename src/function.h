@@ -49,3 +49,10 @@ void log_likelihood(int B, const float* y, int incy, const float* Z, int ldZ,
  */
 void log_likelihood_grad(int B, const float* y, int incy, const float* Z,
     int ldZ, float* dZ, int lddZ);
+
+/**
+ * Take one step of an Adam optimizer.
+ */
+void adam(const int P, const int t, const float gamma, const float beta1,
+    const float beta2, const float epsilon, float* m, float* v, float* theta,
+    float* dtheta);
