@@ -3,42 +3,27 @@
  */
 typedef struct model_t {
   /**
-   * Layer weights.
+   * Parameters.
    */
-  float** W;
+  float* theta;
 
   /**
-   * Gradients of layer weights.
+   * Gradient of parameters.
    */
-  float** dW;
-
-  /**
-   * Layer biases.
-   */
-  float** b;
-
-  /**
-   * Gradients of biases.
-   */
-  float** db;
+  float* dtheta;
 
   /**
    * Layer activations.
    */
-  float** Z;
+  float* Z;
 
   /**
-   * Gradients of layer activations.
+   * Gradient of layer activations.
    */
-  float** dZ;
+  float* dZ;
 
   /**
-   * Observations.
-   */
-  float* y;
-
-  /**
-   * Batch log-likelihoods.
+   * Log-likelihoods.
    */
   float* l;
 
@@ -48,12 +33,27 @@ typedef struct model_t {
   float* ll;
 
   /**
-   * Input size.
+   * Layer widths.
+   */
+  const int* u;
+
+  /**
+   * Number of units.
+   */
+  int U;
+
+  /**
+   * Number of parameters.
    */
   int P;
 
   /**
-   * Batch size.
+   * Number of fields in data, including features and label.
+   */
+  int M;
+
+  /**
+   * Number of records per batch.
    */
   int B;
 
@@ -62,24 +62,19 @@ typedef struct model_t {
    */
   int L;
 
-  /**
-   * Layer widths.
-   */
-  const int* U;
-
 } model_t;
 
 /**
  * Allocate and initialize model.
  *
  * @param m Model to initialize.
- * @param P Input size.
- * @param B Batch size.
+ * @param M Number of fields.
+ * @param B Number of records per batch.
  * @param L Number of layers.
- * @param U Layer widths. Should be an array of size @p L.
+ * @param u Layer widths. Should be an array of size @p L.
  */
-void model_init(model_t* m, const int P, const int B, const int L,
-    const int* U);
+void model_init(model_t* model, const int M, const int B, const int L,
+    const int* u);
 
 /**
  * Destroy and deallocate model.
@@ -92,7 +87,7 @@ void model_term(model_t* m);
  * Perform forward pass.
  * 
  * @param m Model.
- * @param X Input.
+ * @param X Batch.
  */
 void model_forward(model_t* m, float* X);
 
@@ -100,6 +95,6 @@ void model_forward(model_t* m, float* X);
  * Perform backward pass.
  * 
  * @param m Model.
- * @param y Output.
+ * @param X Batch.
  */
-void model_backward(model_t* m, float* y);
+void model_backward(model_t* m, float* X);

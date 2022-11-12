@@ -12,12 +12,12 @@ int main(const int argc, const char *argv[]) {
   data_init(&d, "bikeshare.csv");
 
   /* model */
-  int P = d.P;
+  int M = d.M;
   int B = 64;
   int L = 3;
-  int U[] = {256, 256, 2};
+  int u[] = {256, 256, 2};
   model_t m;
-  model_init(&m, P, B, L, U);
+  model_init(&m, M, B, L, u);
 
   /* optimizer */
   optimizer_t o;

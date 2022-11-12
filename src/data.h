@@ -8,14 +8,14 @@ typedef struct data_t {
   float* X;
 
   /**
-   * Number of data points.
+   * Number of fields, including features and label.
    */
-  int N;
+  int M;
 
   /**
-   * Number of features.
+   * Number of records.
    */
-  int P;
+  int N;
 
 } data_t;
 

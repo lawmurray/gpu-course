@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-void data_init(data_t* d, const char* file) {
+void data_init(data_t* data, const char* file) {
   float* X = NULL;  // buffer to fill
-  int N = 0;  // number of lines
-  int P = 0;  // number of values per line, computed from first
+  int M = 0;  // number of fields, computed from first record
+  int N = 0;  // number of records
   
   FILE* fp = fopen(file, "r");
   if (fp == NULL) {
@@ -19,38 +19,37 @@ void data_init(data_t* d, const char* file) {
   char* line = NULL;
   size_t len = 0;
   while (getline(&line, &len, fp) > 0) {
-    int p = 0;
+    int m = 0;
     char* token = strtok(line, ",");
     while (token) {
-      X = (float*)realloc(X, (N*P + p + 1)*sizeof(float));
-      X[N*P + p] = atof(token);
-      ++p;
+      X = (float*)realloc(X, (N*M + m + 1)*sizeof(float));
+      X[M*N + m] = atof(token);
+      ++m;
       token = strtok(NULL, ",");
     }
     ++N;
 
     /* set or check number of values */
     if (N == 1) {
-      P = p;
-    } else if (p != P) {
-      fprintf(stderr, "Line %d has %d values, expecting %d\n", N, p, P);
+      M = m;
+    } else if (m != M) {
+      fprintf(stderr, "Line %d has %d values, expecting %d\n", N, m, M);
     }
   }
   free(line);
   fclose(fp);
 
-  cudaMalloc((void**)&d->X, N*P*sizeof(float));
-  cudaMemcpy(d->X, X, N*P*sizeof(float), cudaMemcpyHostToDevice);
+  cudaMalloc((void**)&data->X, M*N*sizeof(float));
+  cudaMemcpy(data->X, X, M*N*sizeof(float), cudaMemcpyHostToDevice);
   free(X);
 
-  d->N = N;
-  d->P = P;
+  data->M = M;
+  data->N = N;
 }
 
-void data_term(data_t* d) {
-  cudaFree(d->X);
-  
-  d->X = NULL;
-  d->N = 0;
-  d->P = 0;
+void data_term(data_t* data) {
+  cudaFree(data->X);
+  data->X = NULL;
+  data->M = 0;
+  data->N = 0;
 }
