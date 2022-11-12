@@ -53,7 +53,7 @@ typedef struct model_t {
   int M;
 
   /**
-   * Number of records per batch.
+   * Maximum number of records per batch.
    */
   int B;
 
@@ -88,13 +88,15 @@ void model_term(model_t* m);
  * 
  * @param m Model.
  * @param X Batch.
+ * @param B Batch size.
  */
-void model_forward(model_t* m, float* X);
+void model_forward(model_t* m, float* X, const int B);
 
 /**
  * Perform backward pass.
  * 
  * @param m Model.
  * @param X Batch.
+ * @param B Batch size.
  */
-void model_backward(model_t* m, float* X);
+void model_backward(model_t* m, float* X, const int B);

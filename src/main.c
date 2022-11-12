@@ -3,6 +3,8 @@
 #include <optimizer.h>
 #include <init.h>
 
+#include <stdio.h>
+
 int main(const int argc, const char *argv[]) {
   /* initialize */
   cuda_init();
@@ -21,7 +23,19 @@ int main(const int argc, const char *argv[]) {
 
   /* optimizer */
   optimizer_t o;
-  optimizer_init(&o, 1.0e-3f, 0.9f, 0.999f, 1.0e-8f);
+  optimizer_init(&o, m.P, 1.0e-3f, 0.9f, 0.999f, 1.0e-8f);
+
+  /* train */
+  for (int epoch = 1; epoch <= 10; ++epoch) {
+    printf("epoch %d ", epoch);
+    for (int i = 0; i < d.N; ++i) {
+      int b = (i + B < d.N) ? B : d.N - i;
+      model_forward(&m, d.X + i, b);
+      model_backward(&m, d.X + i, b);
+      optimizer_step(&o, m.theta, m.dtheta);
+    }
+    printf("loss = %f\n", 0.0f);
+  }
 
   /* clean up */
   optimizer_term(&o);

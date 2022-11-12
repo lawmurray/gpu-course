@@ -59,9 +59,10 @@ void model_term(model_t* m) {
   m->u = NULL;
 }
 
-void model_forward(model_t* m, float* X) {
+void model_forward(model_t* m, float* X, const int B) {
+  assert(B <= m->B);
+
   int M = m->M;
-  int B = m->B;
   int L = m->L;
   float* y = X + M - 1;  // last field is label
 
@@ -98,11 +99,12 @@ void model_forward(model_t* m, float* X) {
   cublasSdot(handle, B, m->l, 1, scalar1, 0, m->ll);
 }
 
-void model_backward(model_t* m, float* X) {
+void model_backward(model_t* m, float* X, const int B) {
+  assert(B <= m->B);
+
   int U = m->U;
   int P = m->P;
   int M = m->M;
-  int B = m->B;
   int L = m->L;
   float* y = X + M - 1;  // last field is label
 
