@@ -1,3 +1,7 @@
+#pragma once
+
+#include <data.h>
+
 /**
  * Model.
  */
@@ -23,14 +27,9 @@ typedef struct model_t {
   float* dZ;
 
   /**
-   * Log-likelihoods.
+   * Log-likelihood.
    */
   float* l;
-
-  /**
-   * Sum of log-likelihoods.
-   */
-  float* ll;
 
   /**
    * Layer widths.
@@ -100,3 +99,8 @@ void model_forward(model_t* m, float* X, const int B);
  * @param B Batch size.
  */
 void model_backward(model_t* m, float* X, const int B);
+
+/**
+ * Prediction.
+ */
+float model_predict(model_t* m, data_t* d);

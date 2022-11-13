@@ -28,13 +28,14 @@ int main(const int argc, const char *argv[]) {
   /* train */
   for (int epoch = 1; epoch <= 10; ++epoch) {
     printf("epoch %d ", epoch);
-    for (int i = 0; i < d.N; ++i) {
+    for (int i = 0; i < d.N; i += B) {
       int b = (i + B < d.N) ? B : d.N - i;
-      model_forward(&m, d.X + i, b);
-      model_backward(&m, d.X + i, b);
+      model_forward(&m, d.X + i*M, b);
+      model_backward(&m, d.X + i*M, b);
       optimizer_step(&o, m.theta, m.dtheta);
     }
-    printf("loss = %f\n", 0.0f);
+    float l = model_predict(&m, &d);
+    printf("mean log likelihood = %f\n", l);
   }
 
   /* clean up */

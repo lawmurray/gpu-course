@@ -1,4 +1,5 @@
 #include <model.h>
+#include <data.h>
 #include <init.h>
 #include <function.h>
 
@@ -22,8 +23,7 @@ void model_init(model_t* m, const int M, const int B, const int L,
   cudaMalloc((void**)&m->dtheta, P*sizeof(float));
   cudaMalloc((void**)&m->Z, U*B*sizeof(float));
   cudaMalloc((void**)&m->dZ, U*B*sizeof(float));
-  cudaMalloc((void**)&m->l, B*sizeof(float)); 
-  cudaMallocHost((void**)&m->ll, sizeof(float));
+  cudaMallocHost((void**)&m->l, sizeof(float));
 
   /* size */
   m->U = U;
@@ -33,19 +33,17 @@ void model_init(model_t* m, const int M, const int B, const int L,
   m->L = L;
   m->u = u;
 
-  /* initialize parameters */
+  /* initialize */
   curandGenerateNormal(gen, m->theta, P, 0.0f, 1.0f);
 }
 
 void model_term(model_t* m) {
-  cudaFreeHost(m->ll);
-  cudaFree(m->l);
+  cudaFreeHost(m->l);
   cudaFree(m->dZ);
   cudaFree(m->Z);
   cudaFree(m->dtheta);
   cudaFree(m->theta);
 
-  m->ll = NULL;
   m->l = NULL;
   m->dZ = NULL;
   m->Z = NULL;
@@ -94,8 +92,6 @@ void model_forward(model_t* m, float* X, const int B) {
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, u, B, u_prev, scalar1,
         W, u, Z_prev, u_prev, scalar1, Z, u);
   }
-  log_likelihood(B, X + M - 1, M, Z, u, m->l, 1);
-  cublasSdot(handle, B, m->l, 1, scalar1, 0, m->ll);
 }
 
 void model_backward(model_t* m, float* X, const int B) {
@@ -164,4 +160,25 @@ void model_backward(model_t* m, float* X, const int B) {
       X, M, scalar0, dW, u);
   cublasSgemv(handle, CUBLAS_OP_N, u, B, scalar1, dZ, u, scalar1, 0, scalar0,
       db, 1);
+}
+
+float model_predict(model_t* m, data_t* d) {
+  float* X = d->X;
+  float* l = d->l;
+  float* Z = m->Z;
+  int N = d->N;
+  int M = m->M;
+  int B = m->B;
+  int L = m->L;
+  int U = m->U;
+  int u = m->u[L - 1];
+
+  for (int i = 0; i < N; i += B) {
+    int b = (i + B < N) ? B : N - i;
+    model_forward(m, X + i*M, b);
+    log_likelihood(b, X + i*M + M - 1, M, Z + b*U - b*u, u, l + i, 1);
+  }
+  cublasSdot(handle, N, d->l, 1, scalar1, 0, m->l);
+  cudaDeviceSynchronize();
+  return *m->l;
 }

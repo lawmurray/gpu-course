@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * Data.
  */
@@ -6,6 +8,11 @@ typedef struct data_t {
    * Buffer.
    */
   float* X;
+
+  /**
+   * Log-likelihoods.
+   */
+  float* l;
 
   /**
    * Number of fields, including features and label.

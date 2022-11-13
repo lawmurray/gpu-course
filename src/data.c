@@ -42,12 +42,14 @@ void data_init(data_t* data, const char* file) {
   cudaMalloc((void**)&data->X, M*N*sizeof(float));
   cudaMemcpy(data->X, X, M*N*sizeof(float), cudaMemcpyHostToDevice);
   free(X);
+  cudaMalloc((void**)&data->l, N*sizeof(float));
 
   data->M = M;
   data->N = N;
 }
 
 void data_term(data_t* data) {
+  cudaFree(data->l);
   cudaFree(data->X);
   data->X = NULL;
   data->M = 0;
