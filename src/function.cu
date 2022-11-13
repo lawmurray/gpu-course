@@ -18,29 +18,32 @@ static __global__ void kernel_rectify_grad(int U, int B, const float* Z, int ldZ
 
 static __global__ void kernel_log_likelihood(int B, const float* y, int incy,
     const float* Z, int ldZ, float* l, int incl) {
-  const float pi = 3.14159265358979f;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
     float mu = fabsf(Z[j*ldZ]);
-    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0f;
+    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0e-6f;
     float z = (y[j*incy] - mu)/sigma;
-    l[j*incl] = logf(2.0f/sqrtf(2.0f*pi)) - 0.5f*z*z - logf(sigma) -
-        logf(erfcf(z/sqrtf(2.0f)));
+    float sqrt2 = sqrtf(2.0f);
+    float sqrt2pi = sqrt(2.0*3.14159265358979);
+    float iota = mu/sigma;
+    l[j*incl] = logf(2.0f/sqrt2pi) - 0.5f*z*z - logf(sigma) -
+        logf(erfcf(-iota/sqrt2));
   }
 }
 
 static __global__ void kernel_log_likelihood_grad(int B, const float* y, int incy,
     const float* Z, int ldZ, float* dZ, int lddZ) {
-  const float pi = 3.14159265358979f;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
     float mu = fabsf(Z[j*ldZ]);
-    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0f;
+    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0e-6f;
     float z = (y[j*incy] - mu)/sigma;
     float sqrt2 = sqrtf(2.0f);
-    float tmp = (2.0f/sqrtf(pi))*expf(-0.5f*z*z)/erfcf(z/sqrt2);
-    float dmu = z/sigma - tmp/(sigma*sqrt2);
-    float dsigma = z/sigma - tmp*z/(sigma*sqrt2);
+    float sqrtpi = sqrt(3.14159265358979);
+    float iota = mu/sigma;
+    float tmp = (2.0f/sqrtpi)*expf(-0.5f*iota*iota)/(sigma*sqrt2)/erfcf(-iota/sqrt2);
+    float dmu = z/sigma - tmp;
+    float dsigma = (z*z - 1.0f)/sigma - tmp*iota;
 
     dZ[j*lddZ] = (Z[j*ldZ] >= 0.0f) ? dmu : -dmu;
     dZ[1 + j*lddZ] = (Z[1 + j*ldZ] >= 0.0f) ? dsigma : -dsigma;

@@ -24,7 +24,7 @@ int main(const int argc, const char *argv[]) {
 
   /* optimizer */
   optimizer_t o;
-  optimizer_init(&o, m.P, 1.0e-7f, 0.9f, 0.999f, 1.0e-8f);
+  optimizer_init(&o, m.P, 1.0e-4f, 0.9f, 0.999f, 1.0e-8f);
 
   /* train */
   for (int epoch = 1; epoch <= 100000; ++epoch) {
