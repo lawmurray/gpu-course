@@ -31,6 +31,8 @@ typedef struct model_t {
    */
   float* l;
 
+  float* ones;
+
   /**
    * Layer widths.
    */

@@ -9,5 +9,5 @@ curandGenerator_t gen;
 float* scalar0;
 float* scalar1;
 
-void cuda_init();
+void cuda_init(const int seed);
 void cuda_term();

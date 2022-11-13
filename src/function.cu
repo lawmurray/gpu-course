@@ -1,6 +1,4 @@
-static const float pi = 3.14159265358979f;
-
-__global__ void kernel_rectify(int U, int B, float* Z, int ldZ) {
+static __global__ void kernel_rectify(int U, int B, float* Z, int ldZ) {
   int i = blockIdx.x*blockDim.x + threadIdx.x;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (i < U && j < B) {
@@ -9,7 +7,7 @@ __global__ void kernel_rectify(int U, int B, float* Z, int ldZ) {
   }
 }
 
-__global__ void kernel_rectify_grad(int U, int B, const float* Z, int ldZ,
+static __global__ void kernel_rectify_grad(int U, int B, const float* Z, int ldZ,
     float* dZ, int lddZ) {
   int i = blockIdx.x*blockDim.x + threadIdx.x;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
@@ -18,36 +16,38 @@ __global__ void kernel_rectify_grad(int U, int B, const float* Z, int ldZ,
   }
 }
 
-__global__ void kernel_log_likelihood(int B, const float* y, int incy,
+static __global__ void kernel_log_likelihood(int B, const float* y, int incy,
     const float* Z, int ldZ, float* l, int incl) {
+  const float pi = 3.14159265358979f;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
-    float mu = Z[j*ldZ];
-    float sigma = fabsf(Z[j*ldZ + 1]);
+    float mu = fabsf(Z[j*ldZ]);
+    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0f;
     float z = (y[j*incy] - mu)/sigma;
     l[j*incl] = logf(2.0f/sqrtf(2.0f*pi)) - 0.5f*z*z - logf(sigma) -
         logf(erfcf(z/sqrtf(2.0f)));
   }
 }
 
-__global__ void kernel_log_likelihood_grad(int B, const float* y, int incy,
+static __global__ void kernel_log_likelihood_grad(int B, const float* y, int incy,
     const float* Z, int ldZ, float* dZ, int lddZ) {
+  const float pi = 3.14159265358979f;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
-    float mu = Z[j*ldZ];
-    float sigma = fabsf(Z[j*ldZ + 1]);
+    float mu = fabsf(Z[j*ldZ]);
+    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0f;
     float z = (y[j*incy] - mu)/sigma;
     float sqrt2 = sqrtf(2.0f);
     float tmp = (2.0f/sqrtf(pi))*expf(-0.5f*z*z)/erfcf(z/sqrt2);
     float dmu = z/sigma - tmp/(sigma*sqrt2);
     float dsigma = z/sigma - tmp*z/(sigma*sqrt2);
 
-    dZ[j*lddZ] = dmu;
-    dZ[j*lddZ + 1] = (Z[j*ldZ + 1] > 0.0f) ? dsigma : -dsigma;
+    dZ[j*lddZ] = (Z[j*ldZ] >= 0.0f) ? dmu : -dmu;
+    dZ[1 + j*lddZ] = (Z[1 + j*ldZ] >= 0.0f) ? dsigma : -dsigma;
   }
 }
 
-__global__ void kernel_adam(const int P, const int t, const float gamma,
+static __global__ void kernel_adam(const int P, const int t, const float gamma,
     const float beta1, const float beta2, const float epsilon, float* m,
     float* v, float* theta, float* dtheta) {
   int i = blockIdx.x*blockDim.x + threadIdx.x;
@@ -84,7 +84,7 @@ extern "C" void log_likelihood_grad(int B, const float* y, int incy,
     const float* Z, int ldZ, float* dZ, int lddZ) {
   dim3 block(1, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
-  kernel_log_likelihood<<<grid,block>>>(B, y, incy, Z, ldZ, dZ, lddZ);
+  kernel_log_likelihood_grad<<<grid,block>>>(B, y, incy, Z, ldZ, dZ, lddZ);
 }
 
 extern "C" void adam(const int P, const int t, const float gamma,

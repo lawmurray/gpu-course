@@ -19,11 +19,15 @@ void model_init(model_t* m, const int M, const int B, const int L,
   }
 
   /* allocate */
-  cudaMalloc((void**)&m->theta, P*sizeof(float));
-  cudaMalloc((void**)&m->dtheta, P*sizeof(float));
-  cudaMalloc((void**)&m->Z, U*B*sizeof(float));
-  cudaMalloc((void**)&m->dZ, U*B*sizeof(float));
-  cudaMallocHost((void**)&m->l, sizeof(float));
+  cudaMallocManaged((void**)&m->theta, P*sizeof(float), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->dtheta, P*sizeof(float), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->Z, U*B*sizeof(float), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->dZ, U*B*sizeof(float), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->l, sizeof(float), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->ones, B*sizeof(float), cudaMemAttachGlobal);
+  for (int i = 0; i < B; ++i) {
+    m->ones[i] = 1.0f;
+  }
 
   /* size */
   m->U = U;
@@ -34,11 +38,28 @@ void model_init(model_t* m, const int M, const int B, const int L,
   m->u = u;
 
   /* initialize */
-  curandGenerateNormal(gen, m->theta, P, 0.0f, 1.0f);
+  int u_prev = M - 1;
+  int u_curr = m->u[0];
+
+  float* W = m->theta;
+  float* b = W + u_curr*u_prev;
+  curandGenerateNormal(gen, W, u_curr*u_prev, 0.0f, 1.0f/sqrtf(u_prev));
+  cudaMemset(b, 0, u_curr*sizeof(float));
+  for (int l = 1; l < L; ++l) {
+    u_prev = m->u[l - 1];
+    u_curr = m->u[l];
+
+    W = b + u_prev;
+    b = W + u_curr*u_prev;
+
+    curandGenerateNormal(gen, W, u_curr*u_prev, 0.0f, 1.0f/sqrtf(u_prev));
+    cudaMemset(b, 0, u_curr*sizeof(float));
+  }
 }
 
 void model_term(model_t* m) {
-  cudaFreeHost(m->l);
+  cudaFree(m->ones);
+  cudaFree(m->l);
   cudaFree(m->dZ);
   cudaFree(m->Z);
   cudaFree(m->dtheta);
@@ -71,10 +92,9 @@ void model_forward(model_t* m, float* X, const int B) {
   float* b = W + u*u_prev;
   float* Z = m->Z;
 
-  cublasSetMatrix(u, B, sizeof(float), b, 0, Z, U);
   cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, u, B, u_prev, scalar1, W, u,
-      X, M, scalar1, Z, u);
-
+      X, M, scalar0, Z, u);
+  cublasSger(handle, u, B, scalar1, b, 1, m->ones, 1, Z, u);
   for (int l = 1; l < L; ++l) {
     u_prev = m->u[l - 1];
     u = m->u[l];
@@ -88,9 +108,9 @@ void model_forward(model_t* m, float* X, const int B) {
     b = W + u*u_prev;
     Z = Z + B*u_prev;
 
-    cublasSetMatrix(u, B, sizeof(float), b, 0, Z, u);
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, u, B, u_prev, scalar1,
-        W, u, Z_prev, u_prev, scalar1, Z, u);
+        W, u, Z_prev, u_prev, scalar0, Z, u);
+    cublasSger(handle, u, B, scalar1, b, 1, m->ones, 1, Z, u);
   }
 }
 
@@ -113,7 +133,7 @@ void model_backward(model_t* m, float* X, const int B) {
   float* dW = m->dtheta + P;
   float* db = NULL;
   float* dZ = NULL;
-  float* dZ_prev = m->dZ + B*(U - u);
+  float* dZ_prev = m->dZ + B*U - B*u;
 
   log_likelihood_grad(B, X + M - 1, M, Z_prev, u, dZ_prev, u);
   for (int l = L - 1; l > 0; --l) {
@@ -180,5 +200,5 @@ float model_predict(model_t* m, data_t* d) {
   }
   cublasSdot(handle, N, d->l, 1, scalar1, 0, m->l);
   cudaDeviceSynchronize();
-  return *m->l;
+  return -*m->l/N;
 }

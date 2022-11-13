@@ -15,6 +15,8 @@ void optimizer_init(optimizer_t* o, const int P, const float gamma,
 
   cudaMalloc((void**)&o->m, P*sizeof(float));
   cudaMalloc((void**)&o->v, P*sizeof(float));
+  cudaMemset(o->m, 0, P*sizeof(float));
+  cudaMemset(o->v, 0, P*sizeof(float));
 }
 
 void optimizer_term(optimizer_t* o) {

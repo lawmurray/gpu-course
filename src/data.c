@@ -39,10 +39,10 @@ void data_init(data_t* data, const char* file) {
   free(line);
   fclose(fp);
 
-  cudaMalloc((void**)&data->X, M*N*sizeof(float));
-  cudaMemcpy(data->X, X, M*N*sizeof(float), cudaMemcpyHostToDevice);
+  cudaMallocManaged((void**)&data->X, M*N*sizeof(float), cudaMemAttachGlobal);
+  cudaMemcpy(data->X, X, M*N*sizeof(float), cudaMemcpyDefault);
   free(X);
-  cudaMalloc((void**)&data->l, N*sizeof(float));
+  cudaMallocManaged((void**)&data->l, N*sizeof(float), cudaMemAttachGlobal);
 
   data->M = M;
   data->N = N;

@@ -2,12 +2,13 @@
 #include <model.h>
 #include <optimizer.h>
 #include <init.h>
+#include <function.h>
 
 #include <stdio.h>
 
 int main(const int argc, const char *argv[]) {
   /* initialize */
-  cuda_init();
+  cuda_init(1);
 
   /* data */
   data_t d;
@@ -15,7 +16,7 @@ int main(const int argc, const char *argv[]) {
 
   /* model */
   int M = d.M;
-  int B = 64;
+  int B = 256;
   int L = 3;
   int u[] = {256, 256, 2};
   model_t m;
@@ -23,10 +24,10 @@ int main(const int argc, const char *argv[]) {
 
   /* optimizer */
   optimizer_t o;
-  optimizer_init(&o, m.P, 1.0e-3f, 0.9f, 0.999f, 1.0e-8f);
+  optimizer_init(&o, m.P, 1.0e-7f, 0.9f, 0.999f, 1.0e-8f);
 
   /* train */
-  for (int epoch = 1; epoch <= 10; ++epoch) {
+  for (int epoch = 1; epoch <= 100000; ++epoch) {
     printf("epoch %d ", epoch);
     for (int i = 0; i < d.N; i += B) {
       int b = (i + B < d.N) ? B : d.N - i;
@@ -35,7 +36,7 @@ int main(const int argc, const char *argv[]) {
       optimizer_step(&o, m.theta, m.dtheta);
     }
     float l = model_predict(&m, &d);
-    printf("mean log likelihood = %f\n", l);
+    printf("loss = %f\n", l);
   }
 
   /* clean up */
