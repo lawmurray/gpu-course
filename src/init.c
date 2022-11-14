@@ -1,15 +1,15 @@
 #include <init.h>
 
 #include <cuda_runtime.h>
+#include <stdlib.h>
 
 void cuda_init(const int seed) {
+  /* seed random number generator */
+  srand48(seed);
+
   /* initialize cuBLAS */
   cublasCreate(&handle);
   cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
-
-  /* initialize cuRAND */
-  curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT);
-  curandSetPseudoRandomGeneratorSeed(gen, seed);
 
   /* initialize scalars */
   cudaMallocManaged((void**)&scalar0, sizeof(float), cudaMemAttachGlobal);
@@ -19,7 +19,6 @@ void cuda_init(const int seed) {
 }
 
 void cuda_term() {
-  curandDestroyGenerator(gen);
   cublasDestroy(handle);
   cudaFree(scalar0);
   cudaFree(scalar1);

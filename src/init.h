@@ -1,10 +1,9 @@
 #pragma once
 
+#include <cuda_runtime.h>
 #include <cublas_v2.h>
-#include <curand.h>
 
 cublasHandle_t handle;
-curandGenerator_t gen;
 
 float* scalar0;
 float* scalar1;

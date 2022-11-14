@@ -7,24 +7,54 @@
  */
 typedef struct model_t {
   /**
-   * Parameters.
+   * All parameters.
    */
   float* theta;
 
   /**
-   * Gradient of parameters.
+   * Gradient of all parameters.
    */
   float* dtheta;
 
   /**
-   * Layer activations.
+   * All activations.
    */
-  float* Z;
+  float* A;
 
   /**
-   * Gradient of layer activations.
+   * Gradient of all activations.
    */
-  float* dZ;
+  float* dA;
+
+  /**
+   * Pointers into theta for individual layer weight matrices.
+   */
+  float** W;
+
+  /**
+   * Pointers into dtheta for gradients of individual layer weight matrices.
+   */
+  float** dW;
+
+  /**
+   * Pointers into theta for individual layer bias vectors.
+   */
+  float** b;
+
+  /**
+   * Pointers into dtheta for gradients of individual layer bias vectors.
+   */
+  float** db;
+
+  /**
+   * Pointers into A for layer activations.
+   */
+  float** Z;
+
+  /**
+   * Pointers into dA for gradients of layer activations.
+   */
+  float** dZ;
 
   /**
    * Log-likelihood.
