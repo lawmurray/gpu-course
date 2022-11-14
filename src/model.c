@@ -45,8 +45,8 @@ void model_init(model_t* m, const int M, const int B, const int L,
     m->dW[l] = m->db[l - 1] + u[l - 1];
     m->b[l] = m->W[l] + u[l]*u[l - 1];
     m->db[l] = m->dW[l] + u[l]*u[l - 1];
-    m->Z[l] = m->Z[l - 1] + u[l];
-    m->dZ[l] = m->dZ[l - 1] + u[l];
+    m->Z[l] = m->Z[l - 1] + B*u[l - 1];
+    m->dZ[l] = m->dZ[l - 1] + B*u[l - 1];
   }
 
   /* size */
@@ -58,6 +58,7 @@ void model_init(model_t* m, const int M, const int B, const int L,
   m->u = u;
 
   /* initialize */
+  cudaDeviceSynchronize();
   for (int i = 0; i < B; ++i) {
     m->ones[i] = 1.0f;
   }
@@ -173,11 +174,10 @@ float model_predict(model_t* m, data_t* d) {
   const int* u = m->u;
 
   for (int i = 0; i < N; i += B) {
-    int b = (i + B < N) ? B : N - i;
+    int b = (i + B <= N) ? B : N - i;
     model_forward(m, X + i*M, b);
     log_likelihood(b, X + i*M + M - 1, M, Z[L - 1], u[L - 1], l + i, 1);
   }
   cublasSdot(handle, N, l, 1, scalar1, 0, m->l);
-  cudaDeviceSynchronize();
-  return -*m->l/N;
+  return *m->l/N;
 }

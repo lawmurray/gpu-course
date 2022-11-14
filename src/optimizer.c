@@ -29,6 +29,7 @@ void optimizer_term(optimizer_t* o) {
 }
 
 void optimizer_step(optimizer_t* o, float* theta, float* dtheta) {
-  adam(o->P, ++o->t, o->gamma, o->beta1, o->beta2, o->epsilon, o->m, o->v,
+  ++o->t;
+  adam(o->P, o->t, o->gamma, o->beta1, o->beta2, o->epsilon, o->m, o->v,
       theta, dtheta);
 }

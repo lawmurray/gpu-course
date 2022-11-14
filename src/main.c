@@ -5,6 +5,7 @@
 #include <function.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(const int argc, const char *argv[]) {
   /* initialize */
@@ -24,13 +25,14 @@ int main(const int argc, const char *argv[]) {
 
   /* optimizer */
   optimizer_t o;
-  optimizer_init(&o, m.P, 1.0e-3f, 0.9f, 0.999f, 1.0e-8f);
+  optimizer_init(&o, m.P, 1.0e-3f, 0.9f, 0.9999f, 1.0e-4f);
 
   /* train */
-  for (int epoch = 1; epoch <= 100000; ++epoch) {
+  for (int epoch = 1; epoch <= 10000; ++epoch) {
     printf("epoch %d ", epoch);
+    data_shuffle(&d);
     for (int i = 0; i < d.N; i += B) {
-      int b = (i + B < d.N) ? B : d.N - i;
+      int b = (i + B <= d.N) ? B : d.N - i;
       model_forward(&m, d.X + i*M, b);
       model_backward(&m, d.X + i*M, b);
       optimizer_step(&o, m.theta, m.dtheta);

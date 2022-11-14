@@ -55,3 +55,18 @@ void data_term(data_t* data) {
   data->M = 0;
   data->N = 0;
 }
+
+void data_shuffle(data_t* data) {
+  cudaDeviceSynchronize();
+  int N = data->N;
+  int M = data->M;
+  float* X = data->X;
+  for (int i = 0; i < N - 1; ++i) {
+    int j = i + (lrand48() % (N - i));
+    for (int k = 0; k < M; ++k) {
+      float tmp = X[M*i + k];
+      X[M*i + k] = X[M*j + k];
+      X[M*j + k] = tmp;
+    }
+  }
+}

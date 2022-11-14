@@ -2,17 +2,17 @@ static __global__ void kernel_rectify(int U, int B, float* Z, int ldZ) {
   int i = blockIdx.x*blockDim.x + threadIdx.x;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (i < U && j < B) {
-    Z[j*ldZ + i] = (Z[j*ldZ + i] <= 0.0f) ? 0.0f : Z[j*ldZ + i];
+    Z[i + j*ldZ] = (Z[i + j*ldZ] <= 0.0f) ? 0.0f : Z[i + j*ldZ];
     // ^ ensures that NaN propagates rather than converts to zero
   }
 }
 
-static __global__ void kernel_rectify_grad(int U, int B, const float* Z, int ldZ,
-    float* dZ, int lddZ) {
+static __global__ void kernel_rectify_grad(int U, int B, const float* Z,
+    int ldZ, float* dZ, int lddZ) {
   int i = blockIdx.x*blockDim.x + threadIdx.x;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (i < U && j < B) {
-    dZ[j*lddZ + i] = (Z[j*ldZ + i] <= 0.0f) ? 0.0f : dZ[j*lddZ + i];
+    dZ[i + j*lddZ] = (Z[i + j*ldZ] <= 0.0f) ? 0.0f : dZ[i + j*lddZ];
   }
 }
 
@@ -31,8 +31,8 @@ static __global__ void kernel_log_likelihood(int B, const float* y, int incy,
   }
 }
 
-static __global__ void kernel_log_likelihood_grad(int B, const float* y, int incy,
-    const float* Z, int ldZ, float* dZ, int lddZ) {
+static __global__ void kernel_log_likelihood_grad(int B, const float* y,
+    int incy, const float* Z, int ldZ, float* dZ, int lddZ) {
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
     float mu = fabsf(Z[j*ldZ]);
@@ -41,7 +41,8 @@ static __global__ void kernel_log_likelihood_grad(int B, const float* y, int inc
     float sqrt2 = sqrtf(2.0f);
     float sqrtpi = sqrt(3.14159265358979);
     float iota = mu/sigma;
-    float tmp = (2.0f/sqrtpi)*expf(-0.5f*iota*iota)/(sigma*sqrt2)/erfcf(-iota/sqrt2);
+    float tmp = (2.0f/sqrtpi)*expf(-0.5f*iota*iota)/(sigma*sqrt2)/
+        erfcf(-iota/sqrt2);
     float dmu = z/sigma - tmp;
     float dsigma = (z*z - 1.0f)/sigma - tmp*iota;
 
@@ -59,7 +60,7 @@ static __global__ void kernel_adam(const int P, const int t, const float gamma,
     v[i] = beta2*v[i] + (1.0f - beta2)*dtheta[i]*dtheta[i];
     float mhat = m[i]/(1.0f - powf(beta1, t));
     float vhat = v[i]/(1.0f - powf(beta2, t));
-    theta[i] = theta[i] - gamma*mhat/(sqrtf(vhat) + epsilon);
+    theta[i] -= gamma*mhat/(sqrtf(vhat) + epsilon);
   }
 }
 

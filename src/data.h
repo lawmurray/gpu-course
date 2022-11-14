@@ -40,3 +40,8 @@ void data_init(data_t* d, const char* file);
  * @param d Data to destroy.
  */
 void data_term(data_t* d);
+
+/**
+ * Shuffle the data set.
+ */
+void data_shuffle(data_t* d);
