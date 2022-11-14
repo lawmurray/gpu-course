@@ -1,10 +1,10 @@
-CFLAGS=-Isrc -O3
+CFLAGS=-Isrc -O3 -g
 
 main: src/main.o src/model.o src/data.o src/optimizer.o src/init.o src/function.o
-	nvcc $(CFLAGS) -g -o $@ $^ -lcublas -lcurand
+	nvcc $(CFLAGS) -o $@ $^ -lcublas
 
 %.o : %.cu
-	nvcc $(CFLAGS) -g -c -o $@ $^
+	nvcc $(CFLAGS) -Xcompiler=-Wall -c -o $@ $^
 
 clean:
 	rm -f src/*.o main
