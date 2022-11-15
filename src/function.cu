@@ -21,7 +21,7 @@ static __global__ void kernel_log_likelihood(int B, const float* y, int incy,
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
     float mu = fabsf(Z[j*ldZ]);
-    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0e-6f;
+    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0e-3f;
     float z = (y[j*incy] - mu)/sigma;
     float sqrt2 = sqrtf(2.0f);
     float sqrt2pi = sqrt(2.0*3.14159265358979);
@@ -36,7 +36,7 @@ static __global__ void kernel_log_likelihood_grad(int B, const float* y,
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
     float mu = fabsf(Z[j*ldZ]);
-    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0e-6f;
+    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0e-3f;
     float z = (y[j*incy] - mu)/sigma;
     float sqrt2 = sqrtf(2.0f);
     float sqrtpi = sqrt(3.14159265358979);
@@ -60,7 +60,9 @@ static __global__ void kernel_adam(const int P, const int t, const float gamma,
     v[i] = beta2*v[i] + (1.0f - beta2)*dtheta[i]*dtheta[i];
     float mhat = m[i]/(1.0f - powf(beta1, t));
     float vhat = v[i]/(1.0f - powf(beta2, t));
-    theta[i] -= gamma*mhat/(sqrtf(vhat) + epsilon);
+    if (vhat >= mhat*mhat) {
+      theta[i] -= gamma*mhat/(sqrtf(vhat) + epsilon);
+    }
   }
 }
 
@@ -96,6 +98,6 @@ extern "C" void adam(const int P, const int t, const float gamma,
     float* v, float* theta, float* dtheta) {
   dim3 block(256);
   dim3 grid((P + block.x - 1)/block.x);
-  kernel_adam<<<grid,block>>>(P, t, gamma, beta1, beta2, epsilon, m, v, theta,
-      dtheta);
+  kernel_adam<<<grid,block>>>(P, t, gamma, beta1, beta2, epsilon, m, v,
+      theta, dtheta);
 }

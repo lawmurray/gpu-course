@@ -17,7 +17,7 @@ int main(const int argc, const char *argv[]) {
 
   /* model */
   int M = d.M;
-  int B = 256;
+  int B = 8192;
   int L = 3;
   int u[] = {256, 256, 2};
   model_t m;
@@ -25,10 +25,10 @@ int main(const int argc, const char *argv[]) {
 
   /* optimizer */
   optimizer_t o;
-  optimizer_init(&o, m.P, 1.0e-3f, 0.9f, 0.9999f, 1.0e-4f);
+  optimizer_init(&o, m.P, 1.0e-3f, 0.9f, 0.999f, 1.0e-8f);
 
   /* train */
-  for (int epoch = 1; epoch <= 10000; ++epoch) {
+  for (int epoch = 1; epoch <= 100000; ++epoch) {
     printf("epoch %d ", epoch);
     data_shuffle(&d);
     for (int i = 0; i < d.N; i += B) {
