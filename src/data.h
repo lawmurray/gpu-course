@@ -5,24 +5,39 @@
  */
 typedef struct data_t {
   /**
-   * Buffer.
+   * Training data.
    */
-  float* X;
+  float* X_train;
 
   /**
-   * Log-likelihoods.
+   * Test data.
    */
-  float* l;
+  float* X_test;
+
+  /**
+   * Training data losses.
+   */
+  float* l_train;
+
+  /**
+   * Test data losses.
+   */
+  float* l_test;
+
+  /**
+   * Number of training records.
+   */
+  int N_train;
+
+  /**
+   * Number of test records.
+   */
+  int N_test;
 
   /**
    * Number of fields, including features and label.
    */
   int M;
-
-  /**
-   * Number of records.
-   */
-  int N;
 
 } data_t;
 
@@ -31,8 +46,9 @@ typedef struct data_t {
  * 
  * @param d Data to initialize.
  * @param file Input CSV file.
+ * @param split Proportion of records to randomly assign to training set.
  */
-void data_init(data_t* d, const char* file);
+void data_init(data_t* d, const char* file, const float split);
 
 /**
  * Destroy and deallocate data.
@@ -40,8 +56,3 @@ void data_init(data_t* d, const char* file);
  * @param d Data to destroy.
  */
 void data_term(data_t* d);
-
-/**
- * Shuffle the data set.
- */
-void data_shuffle(data_t* d);

@@ -58,3 +58,8 @@ void log_likelihood_grad(int B, const float* y, int incy, const float* Z,
 void adam(const int P, const int t, const float gamma, const float beta1,
     const float beta2, const float epsilon, float* m, float* v, float* theta,
     float* dtheta);
+
+/**
+ * Randomly shuffle the columns of a matrix.
+ */
+void shuffle(int M, int N, float* X, int ldX);

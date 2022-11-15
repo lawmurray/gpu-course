@@ -57,9 +57,14 @@ typedef struct model_t {
   float** dZ;
 
   /**
-   * Log-likelihood.
+   * Log-likelihoods.
    */
   float* l;
+
+  /**
+   * Sum of log-likelihoods.
+  */
+  float* ll;
 
   float* ones;
 
@@ -133,6 +138,10 @@ void model_forward(model_t* m, float* X, const int B);
 void model_backward(model_t* m, float* X, const int B);
 
 /**
- * Prediction.
+ * Perform prediction after forward pass.
+ * 
+ * @param m Model.
+ * @param X Batch.
+ * @param B Batch size.
  */
-float model_predict(model_t* m, data_t* d);
+void model_predict(model_t* m, float* X, const int B);

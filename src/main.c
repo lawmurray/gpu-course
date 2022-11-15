@@ -13,15 +13,14 @@ int main(const int argc, const char *argv[]) {
 
   /* data */
   data_t d;
-  data_init(&d, "bikeshare.csv");
+  data_init(&d, "bikeshare.csv", 0.8f);
 
   /* model */
-  int M = d.M;
-  int B = 8192;
+  int B = 4096;
   int L = 3;
   int u[] = {256, 256, 2};
   model_t m;
-  model_init(&m, M, B, L, u);
+  model_init(&m, d.M, B, L, u);
 
   /* optimizer */
   optimizer_t o;
@@ -29,16 +28,38 @@ int main(const int argc, const char *argv[]) {
 
   /* train */
   for (int epoch = 1; epoch <= 100000; ++epoch) {
-    printf("epoch %d ", epoch);
-    data_shuffle(&d);
-    for (int i = 0; i < d.N; i += B) {
-      int b = (i + B <= d.N) ? B : d.N - i;
-      model_forward(&m, d.X + i*M, b);
-      model_backward(&m, d.X + i*M, b);
+    printf("epoch %d: ", epoch);
+
+    /* train */
+    shuffle(d.M, d.N_train, d.X_train, d.M);
+    for (int i = 0; i < d.N_train; i += B) {
+      int b = (i + B <= d.N_train) ? B : d.N_train - i;
+      model_forward(&m, d.X_train + i*d.M, b);
+      model_backward(&m, d.X_train + i*d.M, b);
       optimizer_step(&o, m.theta, m.dtheta);
     }
-    float l = model_predict(&m, &d);
-    printf("loss = %f\n", l);
+
+    /* training loss */
+    cudaDeviceSynchronize();
+    *m.ll = 0.0f;
+    for (int i = 0; i < d.N_train; i += B) {
+      int b = (i + B <= d.N_train) ? B : d.N_train - i;
+      model_forward(&m, d.X_train + i*d.M, b);
+      model_predict(&m, d.X_train + i*d.M, b);
+    }
+    cudaDeviceSynchronize();
+    printf("train loss %f ", -*m.ll/d.N_train);
+
+    /* test loss */
+    cudaDeviceSynchronize();
+    *m.ll = 0.0f;
+    for (int i = 0; i < d.N_test; i += B) {
+      int b = (i + B <= d.N_test) ? B : d.N_test - i;
+      model_forward(&m, d.X_test + i*d.M, b);
+      model_predict(&m, d.X_test + i*d.M, b);
+    }
+    cudaDeviceSynchronize();
+    printf("test loss %f\n", -*m.ll/d.N_test);
   }
 
   /* clean up */

@@ -23,7 +23,8 @@ void model_init(model_t* m, const int M, const int B, const int L,
   cudaMallocManaged((void**)&m->dtheta, P*sizeof(float), cudaMemAttachGlobal);
   cudaMallocManaged((void**)&m->A, U*B*sizeof(float), cudaMemAttachGlobal);
   cudaMallocManaged((void**)&m->dA, U*B*sizeof(float), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&m->l, sizeof(float), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->l, B*sizeof(float), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->ll, sizeof(float), cudaMemAttachGlobal);
   cudaMallocManaged((void**)&m->ones, B*sizeof(float), cudaMemAttachGlobal);
 
   /* convenience pointers into allocations */
@@ -93,6 +94,7 @@ void model_term(model_t* m) {
   cudaFree(m->A);
   cudaFree(m->dA);
   cudaFree(m->l);
+  cudaFree(m->ll);
   cudaFree(m->ones);
 
   m->theta = NULL;
@@ -100,6 +102,7 @@ void model_term(model_t* m) {
   m->A = NULL;
   m->dA = NULL;
   m->l = NULL;
+  m->ll = NULL;
   m->ones = NULL;
   
   m->U = 0;
@@ -163,21 +166,15 @@ void model_backward(model_t* m, float* X, const int B) {
       scalar0, db[0], 1);
 }
 
-float model_predict(model_t* m, data_t* d) {
-  float* X = d->X;
-  float* l = d->l;
+void model_predict(model_t* m, float* X, const int B) {
   float** Z = m->Z;
-  int N = d->N;
+  float* l = m->l;
+  float* ll = m->ll;
   int M = m->M;
-  int B = m->B;
   int L = m->L;
   const int* u = m->u;
 
-  for (int i = 0; i < N; i += B) {
-    int b = (i + B <= N) ? B : N - i;
-    model_forward(m, X + i*M, b);
-    log_likelihood(b, X + i*M + M - 1, M, Z[L - 1], u[L - 1], l + i, 1);
-  }
-  cublasSdot(handle, N, l, 1, scalar1, 0, m->l);
-  return *m->l/N;
+  log_likelihood(B, X + M - 1, M, Z[L - 1], u[L - 1], l, 1);
+  cublasSgemv(handle, CUBLAS_OP_N, 1, B, scalar1, m->l, 1, scalar1, 0,
+      scalar1, m->ll, 1);
 }
