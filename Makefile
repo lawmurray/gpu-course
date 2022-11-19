@@ -1,4 +1,4 @@
-NVCC=/usr/local/cuda/bin/nvcc
+NVCC=nvcc
 CFLAGS=-Isrc -I/usr/local/cuda/include -O3 -g
 LDFLAGS=-L/usr/local/cuda/lib64
 
