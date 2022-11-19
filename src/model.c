@@ -104,7 +104,7 @@ void model_term(model_t* m) {
   m->l = NULL;
   m->ll = NULL;
   m->ones = NULL;
-  
+
   m->U = 0;
   m->P = 0;
   m->M = 0;
@@ -144,6 +144,7 @@ void model_backward(model_t* m, float* X, const int B) {
   float** db = m->db;
   float** Z = m->Z;
   float** dZ = m->dZ;
+  float* ones = m->ones;
 
   int M = m->M;
   int L = m->L;
@@ -157,12 +158,12 @@ void model_backward(model_t* m, float* X, const int B) {
     rectify_grad(u[l - 1], B, Z[l - 1], u[l - 1], dZ[l - 1], u[l - 1]);
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, u[l], u[l - 1], B, scalar1,
         dZ[l], u[l], Z[l - 1], u[l - 1], scalar0, dW[l], u[l]);
-    cublasSgemv(handle, CUBLAS_OP_N, u[l], B, scalar1, dZ[l], u[l], scalar1,
-        0, scalar0, db[l], 1);
+    cublasSgemv(handle, CUBLAS_OP_N, u[l], B, scalar1, dZ[l], u[l], ones,
+        1, scalar0, db[l], 1);
   }
   cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, u[0], M - 1, B, scalar1,
       dZ[0], u[0], X, M, scalar0, dW[0], u[0]);
-  cublasSgemv(handle, CUBLAS_OP_N, u[0], B, scalar1, dZ[0], u[0], scalar1, 0,
+  cublasSgemv(handle, CUBLAS_OP_N, u[0], B, scalar1, dZ[0], u[0], ones, 1,
       scalar0, db[0], 1);
 }
 
@@ -170,11 +171,12 @@ void model_predict(model_t* m, float* X, const int B) {
   float** Z = m->Z;
   float* l = m->l;
   float* ll = m->ll;
+  float* ones = m->ones;
   int M = m->M;
   int L = m->L;
   const int* u = m->u;
 
   log_likelihood(B, X + M - 1, M, Z[L - 1], u[L - 1], l, 1);
-  cublasSgemv(handle, CUBLAS_OP_N, 1, B, scalar1, m->l, 1, scalar1, 0,
+  cublasSgemv(handle, CUBLAS_OP_N, 1, B, scalar1, m->l, 1, ones, 1,
       scalar1, m->ll, 1);
 }
