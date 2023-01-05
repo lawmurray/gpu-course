@@ -27,7 +27,7 @@ int main(const int argc, const char *argv[]) {
   optimizer_init(&o, m.P, 1.0e-3f, 0.9f, 0.999f, 1.0e-8f);
 
   /* train */
-  for (int epoch = 1; epoch <= 100000; ++epoch) {
+  for (int epoch = 1; epoch <= 200; ++epoch) {
     printf("epoch %d: ", epoch);
 
     /* train */
