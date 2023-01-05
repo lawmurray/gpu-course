@@ -59,7 +59,6 @@ void model_init(model_t* m, const int M, const int B, const int L,
   m->u = u;
 
   /* initialize */
-  cudaDeviceSynchronize();
   for (int i = 0; i < B; ++i) {
     m->ones[i] = 1.0f;
   }

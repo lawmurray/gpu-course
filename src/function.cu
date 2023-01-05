@@ -103,7 +103,6 @@ extern "C" void adam(const int P, const int t, const float gamma,
 }
 
 extern "C" void shuffle(int M, int N, float* X, int ldX) {
-  cudaDeviceSynchronize();
   for (int i = 0; i < N - 1; ++i) {
     int j = i + (lrand48() % (N - i));
     for (int k = 0; k < M; ++k) {
