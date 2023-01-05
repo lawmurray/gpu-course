@@ -3,6 +3,10 @@
 #include <cuda_runtime.h>
 #include <stdlib.h>
 
+cublasHandle_t handle;
+float* scalar0;
+float* scalar1;
+
 void cuda_init(const int seed) {
   /* seed random number generator */
   srand48(seed);
