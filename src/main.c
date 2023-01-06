@@ -28,7 +28,7 @@ int main(const int argc, const char *argv[]) {
 
   /* train */
   for (int epoch = 1; epoch <= 200; ++epoch) {
-    printf("epoch %d: ", epoch);
+    fprintf(stderr, "epoch %d: ", epoch);
 
     /* train */
     for (int i = 0; i < d.N_train; i += B) {
@@ -47,7 +47,7 @@ int main(const int argc, const char *argv[]) {
       model_predict(&m, d.X_train + i*d.M, b);
     }
     cudaDeviceSynchronize();
-    printf("train loss %f ", -*m.ll/d.N_train);
+    fprintf(stderr, "train loss %f ", -*m.ll/d.N_train);
 
     /* test loss */
     *m.ll = 0.0f;
@@ -57,7 +57,7 @@ int main(const int argc, const char *argv[]) {
       model_predict(&m, d.X_test + i*d.M, b);
     }
     cudaDeviceSynchronize();
-    printf("test loss %f\n", -*m.ll/d.N_test);
+    fprintf(stderr, "test loss %f\n", -*m.ll/d.N_test);
 
     /* shuffle data for next time */
     shuffle(d.M, d.N_train, d.X_train, d.M);
