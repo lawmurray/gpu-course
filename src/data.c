@@ -43,7 +43,6 @@ void data_init(data_t* data, const char* file, const float split) {
   free(line);
   fclose(fp);
 
-  shuffle(M, N, X, M);
   int N_train = split*N;
   int N_test = N - N_train;
 
@@ -79,4 +78,19 @@ void data_term(data_t* data) {
   data->N_train = 0;
   data->N_test = 0;
   data->M = 0;
+}
+
+void data_shuffle(data_t* data) {
+  float* X = data->X_train;
+  int N = data->N_train;
+  int M = data->M;
+
+  for (int i = 0; i < N - 1; ++i) {
+    int j = i + (lrand48() % (N - i));
+    for (int k = 0; k < M; ++k) {
+      float tmp = X[M*i + k];
+      X[M*i + k] = X[M*j + k];
+      X[M*j + k] = tmp;
+    }
+  }
 }

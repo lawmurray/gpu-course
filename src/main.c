@@ -29,15 +29,11 @@ int main(const int argc, const char *argv[]) {
   /* train */
   float* X_train = NULL;
   size_t bytes = d.M*d.N_train*sizeof(float);
-  cudaMalloc((void**)&X_train, bytes);
-  cudaEvent_t event;
-  cudaEventCreate(&event);
+  cudaMallocManaged((void**)&X_train, bytes, cudaMemAttachGlobal);
+  cudaMemcpy(X_train, d.X_train, bytes, cudaMemcpyDefault);
 
   for (int epoch = 1; epoch <= 100; ++epoch) {
-    /* copy up shuffled data */
-    cudaMemcpyAsync(X_train, d.X_train, bytes, cudaMemcpyDefault,
-        cudaStreamDefault);
-    cudaEventRecord(event, cudaStreamDefault);
+    fprintf(stderr, "epoch %d: ", epoch);
 
     /* train */
     for (int i = 0; i < d.N_train; i += B) {
@@ -47,26 +43,26 @@ int main(const int argc, const char *argv[]) {
       optimizer_step(&o, m.theta, m.dtheta);
     }
 
+    /* shuffle data for next time */
+    data_shuffle(&d);
+    float* tmp = d.X_train;
+    d.X_train = X_train;
+    X_train = tmp;
+    cudaDeviceSynchronize();
+
     /* test loss */
+    *m.ll = 0.0f;
     for (int i = 0; i < d.N_test; i += B) {
       int b = (i + B <= d.N_test) ? B : d.N_test - i;
       model_forward(&m, d.X_test + i*d.M, b);
       model_predict(&m, d.X_test + i*d.M, b);
     }
-
-    /* shuffle data for next time */
-    cudaEventSynchronize(event);
-    shuffle(d.M, d.N_train, d.X_train, d.M);
-
-    /* report */
     cudaDeviceSynchronize();
-    fprintf(stderr, "epcoh %d: test loss %f\n", epoch, -*m.ll/d.N_test);
-    *m.ll = 0.0f;
+    fprintf(stderr, "test loss %f\n", -*m.ll/d.N_test);
   }
 
   /* clean up */
   cudaFree(X_train);
-  cudaEventDestroy(event);
   optimizer_term(&o);
   model_term(&m);
   data_term(&d);
