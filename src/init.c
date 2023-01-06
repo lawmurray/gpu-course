@@ -8,7 +8,7 @@ cublasHandle_t handle;
 float* scalar0;
 float* scalar1;
 
-void cuda_init(const int seed) {
+int cuda_init(const int seed) {
   int device = 0, value = 0;
   cudaGetDevice(&device);
   cudaDeviceGetAttribute(&value, cudaDevAttrConcurrentManagedAccess, device);
@@ -29,6 +29,8 @@ void cuda_init(const int seed) {
   cudaMallocManaged((void**)&scalar1, sizeof(float), cudaMemAttachGlobal);
   *scalar0 = 0.0f;
   *scalar1 = 1.0f;
+
+  return device;
 }
 
 void cuda_term() {

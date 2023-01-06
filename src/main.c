@@ -9,7 +9,7 @@
 
 int main(const int argc, const char *argv[]) {
   /* initialize */
-  cuda_init(1);
+  int device = cuda_init(1);
 
   /* data */
   data_t d;
@@ -18,7 +18,7 @@ int main(const int argc, const char *argv[]) {
   /* model */
   int B = 4096;
   int L = 3;
-  int u[] = {256, 256, 2};
+  int u[] = {1024, 1024, 2};
   model_t m;
   model_init(&m, d.M, B, L, u);
 
@@ -34,6 +34,8 @@ int main(const int argc, const char *argv[]) {
 
   for (int epoch = 1; epoch <= 100; ++epoch) {
     fprintf(stderr, "epoch %d: ", epoch);
+    cudaMemPrefetchAsync(X_train, bytes, device, cudaStreamDefault);
+    cudaMemPrefetchAsync(d.X_train, bytes, cudaCpuDeviceId, cudaStreamDefault);
 
     /* train */
     for (int i = 0; i < d.N_train; i += B) {
@@ -43,22 +45,22 @@ int main(const int argc, const char *argv[]) {
       optimizer_step(&o, m.theta, m.dtheta);
     }
 
-    /* shuffle data for next time */
-    data_shuffle(&d);
-    float* tmp = d.X_train;
-    d.X_train = X_train;
-    X_train = tmp;
-    cudaDeviceSynchronize();
-
     /* test loss */
-    *m.ll = 0.0f;
     for (int i = 0; i < d.N_test; i += B) {
       int b = (i + B <= d.N_test) ? B : d.N_test - i;
       model_forward(&m, d.X_test + i*d.M, b);
       model_predict(&m, d.X_test + i*d.M, b);
     }
+
+    /* shuffle data for next time */
+    data_shuffle(&d);
+    float* tmp = d.X_train;
+    d.X_train = X_train;
+    X_train = tmp;
+
     cudaDeviceSynchronize();
     fprintf(stderr, "test loss %f\n", -*m.ll/d.N_test);
+    *m.ll = 0.0f;  // reset for next time
   }
 
   /* clean up */
