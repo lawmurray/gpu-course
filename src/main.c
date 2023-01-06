@@ -60,7 +60,7 @@ int main(const int argc, const char *argv[]) {
     fprintf(stderr, "test loss %f\n", -*m.ll/d.N_test);
 
     /* shuffle data for next time */
-    shuffle(d.M, d.N_train, d.X_train, d.M);
+    data_shuffle(&d);
   }
 
   /* clean up */

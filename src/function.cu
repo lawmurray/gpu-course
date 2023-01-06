@@ -101,14 +101,3 @@ extern "C" void adam(const int P, const int t, const float gamma,
   kernel_adam<<<grid,block>>>(P, t, gamma, beta1, beta2, epsilon, m, v,
       theta, dtheta);
 }
-
-extern "C" void shuffle(int M, int N, float* X, int ldX) {
-  for (int i = 0; i < N - 1; ++i) {
-    int j = i + (lrand48() % (N - i));
-    for (int k = 0; k < M; ++k) {
-      float tmp = X[M*i + k];
-      X[M*i + k] = X[M*j + k];
-      X[M*j + k] = tmp;
-    }
-  }
-}

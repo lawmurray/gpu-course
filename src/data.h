@@ -56,3 +56,10 @@ void data_init(data_t* d, const char* file, const float split);
  * @param d Data to destroy.
  */
 void data_term(data_t* d);
+
+/**
+ * Randomly shuffle training data.
+ *
+ * @param d Data to shuffle.
+ */
+void data_shuffle(data_t* d);
