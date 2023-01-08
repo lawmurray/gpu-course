@@ -1,7 +1,8 @@
 /**
  * @def ENABLE_SINGLE
  * 
- * Enable single precision?
+ * Enable single precision? Set to 1 to use single precision, or 0 to use
+ * double precision.
  */
 #define ENABLE_SINGLE 1
 

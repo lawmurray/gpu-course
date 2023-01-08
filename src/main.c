@@ -1,11 +1,11 @@
+#include <init.h>
 #include <data.h>
 #include <model.h>
 #include <optimizer.h>
-#include <init.h>
-#include <function.h>
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 int main(const int argc, const char *argv[]) {
   /* initialize */
