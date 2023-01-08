@@ -24,33 +24,32 @@ void rectify(int U, int B, float* Z, int ldZ);
 void rectify_grad(int U, int B, const float* Z, int ldZ, float* dZ, int lddZ);
 
 /**
- * Log-likelihood.
+ * Squared error loss.
  * 
  * @param B Batch size.
  * @param y Observations.
  * @param incy Stride between elements of @p y (increment).
- * @param Z Matrix where rows index units, columns index batch members.
- * @param ldZ Stride between columns of @p Z (lead).
+ * @param m Predictions.
+ * @param incm Stride between elements of @p m (increment).
  * @param[out] l Log-likelihoods.
  * @param incl Stride between elements of @p l (increment).
  */
-void log_likelihood(int B, const float* y, int incy, const float* Z, int ldZ,
+void squared_error(int B, const float* y, int incy, const float* Z, int ldZ,
     float* l, int incl);
 
 /**
- * Gradient of log-likelihood.
+ * Gradient of squared error loss.
  * 
  * @param B Batch size.
  * @param y Observations.
  * @param incy Stride between elements of @p y (increment).
- * @param Z Matrix where columns index batch members, and there are two rows,
- * to be converted to mean and variance.
- * @param ldZ Stride between columns of @p Z (lead).
- * @param[out] dZ Partial derivatives with respect to @p Z.
- * @param lddZ Stride between columns of @p dZ (lead).
+ * @param m Predictions.
+ * @param incm Stride between elements of @p m (increment).
+ * @param[out] d Partial derivatives with respect to @p m.
+ * @param incd Stride between elements of @p d (increment).
  */
-void log_likelihood_grad(int B, const float* y, int incy, const float* Z,
-    int ldZ, float* dZ, int lddZ);
+void squared_error_grad(int B, const float* y, int incy, const float* m,
+    int ldm, float* d, int incd);
 
 /**
  * Take one step of an Adam optimizer.

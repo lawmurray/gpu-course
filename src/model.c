@@ -149,8 +149,7 @@ void model_backward(model_t* m, float* X, const int B) {
   int L = m->L;
   const int* u = m->u;
 
-  log_likelihood_grad(B, X + M - 1, M, Z[L - 1], u[L - 1], dZ[L - 1],
-      u[L - 1]);
+  squared_error_grad(B, X + M - 1, M, Z[L - 1], 1, dZ[L - 1], 1);
   for (int l = L - 1; l > 0; --l) {
     cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, u[l - 1], B, u[l],
         scalar1, W[l], u[l], dZ[l], u[l], scalar0, dZ[l - 1], u[l - 1]);
@@ -175,7 +174,7 @@ void model_predict(model_t* m, float* X, const int B) {
   int L = m->L;
   const int* u = m->u;
 
-  log_likelihood(B, X + M - 1, M, Z[L - 1], u[L - 1], l, 1);
+  squared_error(B, X + M - 1, M, Z[L - 1], 1, l, 1);
   cublasSgemv(handle, CUBLAS_OP_N, 1, B, scalar1, m->l, 1, ones, 1,
       scalar1, m->ll, 1);
 }

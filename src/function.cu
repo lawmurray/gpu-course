@@ -16,38 +16,20 @@ static __global__ void kernel_rectify_grad(int U, int B, const float* Z,
   }
 }
 
-static __global__ void kernel_log_likelihood(int B, const float* y, int incy,
-    const float* Z, int ldZ, float* l, int incl) {
+static __global__ void kernel_squared_error(int B, const float* y, int incy,
+    const float* m, int incm, float* l, int incl) {
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
-    float mu = fabsf(Z[j*ldZ]);
-    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0e-3f;
-    float z = (y[j*incy] - mu)/sigma;
-    float sqrt2 = sqrtf(2.0f);
-    float sqrt2pi = sqrt(2.0*3.14159265358979);
-    float iota = mu/sigma;
-    l[j*incl] = logf(2.0f/sqrt2pi) - 0.5f*z*z - logf(sigma) -
-        logf(erfcf(-iota/sqrt2));
+    float z = y[j*incy] - m[j*incm];
+    l[j*incl] = z*z;
   }
 }
 
-static __global__ void kernel_log_likelihood_grad(int B, const float* y,
-    int incy, const float* Z, int ldZ, float* dZ, int lddZ) {
+static __global__ void kernel_squared_error_grad(int B, const float* y,
+    int incy, const float* m, int incm, float* d, int incd) {
   int j = blockIdx.y*blockDim.y + threadIdx.y;
   if (j < B) {
-    float mu = fabsf(Z[j*ldZ]);
-    float sigma = fabsf(Z[1 + j*ldZ]) + 1.0e-3f;
-    float z = (y[j*incy] - mu)/sigma;
-    float sqrt2 = sqrtf(2.0f);
-    float sqrtpi = sqrt(3.14159265358979);
-    float iota = mu/sigma;
-    float tmp = (2.0f/sqrtpi)*expf(-0.5f*iota*iota)/(sigma*sqrt2)/
-        erfcf(-iota/sqrt2);
-    float dmu = z/sigma - tmp;
-    float dsigma = (z*z - 1.0f)/sigma - tmp*iota;
-
-    dZ[j*lddZ] = (Z[j*ldZ] >= 0.0f) ? dmu : -dmu;
-    dZ[1 + j*lddZ] = (Z[1 + j*ldZ] >= 0.0f) ? dsigma : -dsigma;
+    d[j*incd] = 2.0f*(y[j*incy] - m[j*incm]);
   }
 }
 
@@ -79,18 +61,18 @@ extern "C" void rectify_grad(int U, int B, const float* Z, int ldZ, float* dZ,
   kernel_rectify_grad<<<grid,block>>>(U, B, Z, ldZ, dZ, lddZ);
 }
 
-extern "C" void log_likelihood(int B, const float* y, int incy,
-    const float* Z, int ldZ, float* l, int incl) {
+extern "C" void squared_error(int B, const float* y, int incy,
+    const float* m, int incm, float* l, int incl) {
   dim3 block(1, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
-  kernel_log_likelihood<<<grid,block>>>(B, y, incy, Z, ldZ, l, incl);
+  kernel_squared_error<<<grid,block>>>(B, y, incy, m, incm, l, incl);
 }
 
-extern "C" void log_likelihood_grad(int B, const float* y, int incy,
-    const float* Z, int ldZ, float* dZ, int lddZ) {
+extern "C" void squared_error_grad(int B, const float* y, int incy,
+    const float* m, int incm, float* d, int incd) {
   dim3 block(1, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
-  kernel_log_likelihood_grad<<<grid,block>>>(B, y, incy, Z, ldZ, dZ, lddZ);
+  kernel_squared_error_grad<<<grid,block>>>(B, y, incy, m, incm, d, incd);
 }
 
 extern "C" void adam(const int P, const int t, const float gamma,
