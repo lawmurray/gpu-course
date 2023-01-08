@@ -26,6 +26,11 @@ int main(const int argc, const char *argv[]) {
   optimizer_t o;
   optimizer_init(&o, m.P, 1.0e-3f, 0.9f, 0.999f, 1.0e-8f);
 
+  /* start timer */
+  struct timeval s, e;
+  cudaDeviceSynchronize();
+  gettimeofday(&s, NULL);
+
   /* train */
   for (int epoch = 1; epoch <= 100; ++epoch) {
     /* iterate over training minibatches, performing gradient updates */
@@ -46,8 +51,11 @@ int main(const int argc, const char *argv[]) {
 
     /* finalize loss and report progress */
     cudaDeviceSynchronize();
-    real loss = *m.ll/d.N_test;
-    fprintf(stderr, "epoch %d: test loss %f\n", epoch, loss);
+    real loss = *m.ll/d.N_test;    
+    gettimeofday(&e, NULL);
+    real elapsed = (e.tv_sec - s.tv_sec) + 1.0e-6f*(e.tv_usec - s.tv_usec);
+    fprintf(stderr, "epoch %d: test loss %f, elapsed %0.4fs\n", epoch, loss,
+        elapsed);
 
     /* shuffle data for next time */
     data_shuffle(&d);
