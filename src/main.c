@@ -44,7 +44,10 @@ int main(const int argc, const char *argv[]) {
       model_loss_accumulate(&m, d.X_test + i*d.M, b);
     }
     cudaDeviceSynchronize();
-    fprintf(stderr, "epoch %d: test loss %f\n", epoch, -*m.ll/d.N_test);
+    real loss = *m.ll/d.N_test;
+
+    /* report progress */
+    fprintf(stderr, "epoch %d: test loss %f\n", epoch, loss);
 
     /* shuffle data for next time */
     data_shuffle(&d);
