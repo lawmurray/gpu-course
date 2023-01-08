@@ -16,7 +16,7 @@ int main(const int argc, const char *argv[]) {
   data_init(&d, "bikeshare.csv", 0.8f);
 
   /* model */
-  int B = 4096;
+  int B = 256;
   int L = 3;
   int u[] = {256, 256, 1};
   model_t m;
