@@ -4,8 +4,8 @@
 
 #include <stdlib.h>
 
-void optimizer_init(optimizer_t* o, const int P, const float gamma,
-    const float beta1, const float beta2, const float epsilon) {
+void optimizer_init(optimizer_t* o, const int P, const real gamma,
+    const real beta1, const real beta2, const real epsilon) {
   o->P = P;
   o->t = 0;
   o->gamma = gamma;
@@ -13,10 +13,10 @@ void optimizer_init(optimizer_t* o, const int P, const float gamma,
   o->beta2 = beta2;
   o->epsilon = epsilon;
 
-  cudaMalloc((void**)&o->m, P*sizeof(float));
-  cudaMalloc((void**)&o->v, P*sizeof(float));
-  cudaMemset(o->m, 0, P*sizeof(float));
-  cudaMemset(o->v, 0, P*sizeof(float));
+  cudaMalloc((void**)&o->m, P*sizeof(real));
+  cudaMalloc((void**)&o->v, P*sizeof(real));
+  cudaMemset(o->m, 0, P*sizeof(real));
+  cudaMemset(o->v, 0, P*sizeof(real));
 }
 
 void optimizer_term(optimizer_t* o) {
@@ -28,7 +28,7 @@ void optimizer_term(optimizer_t* o) {
   o->t = 0;
 }
 
-void optimizer_step(optimizer_t* o, float* theta, float* dtheta) {
+void optimizer_step(optimizer_t* o, real* theta, real* dtheta) {
   ++o->t;
   adam(o->P, o->t, o->gamma, o->beta1, o->beta2, o->epsilon, o->m, o->v,
       theta, dtheta);
