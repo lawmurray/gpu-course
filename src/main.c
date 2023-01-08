@@ -18,7 +18,7 @@ int main(const int argc, const char *argv[]) {
   /* model */
   int B = 256;
   int L = 3;
-  int u[] = {256, 256, 1};
+  int u[] = {1024, 1024, 1};
   model_t m;
   model_init(&m, d.M, B, L, u);
 
