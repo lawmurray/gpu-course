@@ -28,7 +28,7 @@ int main(const int argc, const char *argv[]) {
 
   /* train */
   for (int epoch = 1; epoch <= 100; ++epoch) {
-    /* iterate over training minibatches */
+    /* iterate over training minibatches, performing gradient updates */
     for (int i = 0; i < d.N_train; i += B) {
       int b = (i + B <= d.N_train) ? B : d.N_train - i;
       model_forward(&m, d.X_train + i*d.M, b);
@@ -36,7 +36,7 @@ int main(const int argc, const char *argv[]) {
       optimizer_step(&o, m.theta, m.dtheta);
     }
 
-    /* test loss */
+    /* iterate over testing minibatches, accumulating loss */
     model_loss_clear(&m);
     for (int i = 0; i < d.N_test; i += B) {
       int b = (i + B <= d.N_test) ? B : d.N_test - i;
