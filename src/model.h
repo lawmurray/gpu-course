@@ -139,10 +139,17 @@ void model_forward(model_t* m, real* X, const int B);
 void model_backward(model_t* m, real* X, const int B);
 
 /**
- * Perform prediction after forward pass.
+ * Reset accumulated loss to zero.
+ * 
+ * @param m Model.
+ */
+void model_loss_clear(model_t* m);
+
+/**
+ * Accumulate loss after forward pass.
  * 
  * @param m Model.
  * @param X Batch.
  * @param B Batch size.
  */
-void model_predict(model_t* m, real* X, const int B);
+void model_loss_accumulate(model_t* m, real* X, const int B);

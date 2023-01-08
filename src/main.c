@@ -37,24 +37,13 @@ int main(const int argc, const char *argv[]) {
       model_backward(&m, d.X_train + i*d.M, b);
       optimizer_step(&o, m.theta, m.dtheta);
     }
-    cudaDeviceSynchronize();
-
-    /* training loss */
-    *m.ll = 0.0f;
-    for (int i = 0; i < d.N_train; i += B) {
-      int b = (i + B <= d.N_train) ? B : d.N_train - i;
-      model_forward(&m, d.X_train + i*d.M, b);
-      model_predict(&m, d.X_train + i*d.M, b);
-    }
-    cudaDeviceSynchronize();
-    fprintf(stderr, "train loss %f ", -*m.ll/d.N_train);
 
     /* test loss */
-    *m.ll = 0.0f;
+    model_loss_clear(&m);
     for (int i = 0; i < d.N_test; i += B) {
       int b = (i + B <= d.N_test) ? B : d.N_test - i;
       model_forward(&m, d.X_test + i*d.M, b);
-      model_predict(&m, d.X_test + i*d.M, b);
+      model_loss_accumulate(&m, d.X_test + i*d.M, b);
     }
     cudaDeviceSynchronize();
     fprintf(stderr, "test loss %f\n", -*m.ll/d.N_test);

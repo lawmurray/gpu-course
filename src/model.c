@@ -165,7 +165,12 @@ void model_backward(model_t* m, real* X, const int B) {
       scalar0, db[0], 1);
 }
 
-void model_predict(model_t* m, real* X, const int B) {
+void model_loss_clear(model_t* m) {
+  cudaMemcpyAsync(m->ll, scalar0, sizeof(real), cudaMemcpyDefault,
+      cudaStreamDefault);
+}
+
+void model_loss_accumulate(model_t* m, real* X, const int B) {
   real** Z = m->Z;
   real* l = m->l;
   real* ll = m->ll;
@@ -175,6 +180,6 @@ void model_predict(model_t* m, real* X, const int B) {
   const int* u = m->u;
 
   squared_error(B, X + M - 1, M, Z[L - 1], 1, l, 1);
-  gemv(handle, CUBLAS_OP_N, 1, B, scalar1, m->l, 1, ones, 1,
-      scalar1, m->ll, 1);
+  gemv(handle, CUBLAS_OP_N, 1, B, scalar1, m->l, 1, ones, 1, scalar1, m->ll,
+      1);
 }

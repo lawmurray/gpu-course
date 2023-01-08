@@ -1,4 +1,4 @@
-#include <function.h>
+#include <config.h>
 
 static __global__ void kernel_rectify(int U, int B, real* Z, int ldZ) {
   int i = blockIdx.x*blockDim.x + threadIdx.x;
