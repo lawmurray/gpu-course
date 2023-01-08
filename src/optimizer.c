@@ -13,8 +13,8 @@ void optimizer_init(optimizer_t* o, const int P, const real gamma,
   o->beta2 = beta2;
   o->epsilon = epsilon;
 
-  cudaMalloc((void**)&o->m, P*sizeof(real));
-  cudaMalloc((void**)&o->v, P*sizeof(real));
+  cudaMallocManaged((void**)&o->m, P*sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&o->v, P*sizeof(real), cudaMemAttachGlobal);
   cudaMemset(o->m, 0, P*sizeof(real));
   cudaMemset(o->v, 0, P*sizeof(real));
 }
