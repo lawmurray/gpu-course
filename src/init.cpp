@@ -25,8 +25,8 @@ void cuda_init(const int seed) {
   cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
   /* initialize scalars */
-  cudaMallocManaged((void**)&scalar0, sizeof(real), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&scalar1, sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&scalar0, sizeof(real));
+  cudaMallocManaged((void**)&scalar1, sizeof(real));
   *scalar0 = 0.0f;
   *scalar1 = 1.0f;
 }

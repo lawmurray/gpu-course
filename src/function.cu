@@ -50,34 +50,34 @@ static __global__ void kernel_adam(const int P, const int t, const real gamma,
   }
 }
 
-extern "C" void rectify(int U, int B, real* Z, int ldZ) {
+void rectify(int U, int B, real* Z, int ldZ) {
   dim3 block(32, 8);
   dim3 grid((U + block.x - 1)/block.x, (B + block.y - 1)/block.y);
   kernel_rectify<<<grid,block>>>(U, B, Z, ldZ);
 }
 
-extern "C" void rectify_grad(int U, int B, const real* Z, int ldZ, real* dZ,
+void rectify_grad(int U, int B, const real* Z, int ldZ, real* dZ,
     int lddZ) {
   dim3 block(32, 8);
   dim3 grid((U + block.x - 1)/block.x, (B + block.y - 1)/block.y);
   kernel_rectify_grad<<<grid,block>>>(U, B, Z, ldZ, dZ, lddZ);
 }
 
-extern "C" void squared_error(int B, const real* y, int incy,
+void squared_error(int B, const real* y, int incy,
     const real* m, int incm, real* l, int incl) {
   dim3 block(1, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
   kernel_squared_error<<<grid,block>>>(B, y, incy, m, incm, l, incl);
 }
 
-extern "C" void squared_error_grad(int B, const real* y, int incy,
+void squared_error_grad(int B, const real* y, int incy,
     const real* m, int incm, real* d, int incd) {
   dim3 block(1, 256);
   dim3 grid(1, (B + block.y - 1)/block.y);
   kernel_squared_error_grad<<<grid,block>>>(B, y, incy, m, incm, d, incd);
 }
 
-extern "C" void adam(const int P, const int t, const real gamma,
+void adam(const int P, const int t, const real gamma,
     const real beta1, const real beta2, const real epsilon, real* m,
     real* v, real* theta, real* dtheta) {
   dim3 block(256);
