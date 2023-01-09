@@ -46,15 +46,15 @@ void data_init(data_t* data, const char* file, const real split) {
   int N_train = split*N;
   int N_test = N - N_train;
 
-  cudaMallocManaged((void**)&data->X_train, M*N_train*sizeof(real));
+  sharedMalloc((void**)&data->X_train, M*N_train*sizeof(real));
   cudaMemcpy(data->X_train, X, M*N_train*sizeof(real), cudaMemcpyDefault);
-  cudaMallocManaged((void**)&data->X_test, M*N_test*sizeof(real));
+  sharedMalloc((void**)&data->X_test, M*N_test*sizeof(real));
   cudaMemcpy(data->X_test, X + N_train, M*N_test*sizeof(real),
       cudaMemcpyDefault);
   free(X);
 
-  cudaMallocManaged((void**)&data->l_train, N_train*sizeof(real));
-  cudaMallocManaged((void**)&data->l_test, N_test*sizeof(real));
+  sharedMalloc((void**)&data->l_train, N_train*sizeof(real));
+  sharedMalloc((void**)&data->l_test, N_test*sizeof(real));
 
   data->N_train = N_train;
   data->N_test = N_test;
@@ -62,10 +62,10 @@ void data_init(data_t* data, const char* file, const real split) {
 }
 
 void data_term(data_t* data) {
-  cudaFree(data->X_train);
-  cudaFree(data->X_test);
-  cudaFree(data->l_train);
-  cudaFree(data->l_test);
+  sharedFree(data->X_train);
+  sharedFree(data->X_test);
+  sharedFree(data->l_train);
+  sharedFree(data->l_test);
 
   data->X_train = NULL;
   data->X_test = NULL;

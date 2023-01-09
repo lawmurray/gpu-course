@@ -25,14 +25,14 @@ void cuda_init(const int seed) {
   cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
   /* initialize scalars */
-  cudaMallocManaged((void**)&scalar0, sizeof(real));
-  cudaMallocManaged((void**)&scalar1, sizeof(real));
+  sharedMalloc((void**)&scalar0, sizeof(real));
+  sharedMalloc((void**)&scalar1, sizeof(real));
   *scalar0 = 0.0f;
   *scalar1 = 1.0f;
 }
 
 void cuda_term() {
   cublasDestroy(handle);
-  cudaFree(scalar0);
-  cudaFree(scalar1);
+  sharedFree(scalar0);
+  sharedFree(scalar1);
 }

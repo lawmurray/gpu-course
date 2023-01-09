@@ -19,13 +19,13 @@ void model_init(model_t* m, const int M, const int B, const int L,
   }
 
   /* allocate */
-  cudaMallocManaged((void**)&m->theta, P*sizeof(real));
-  cudaMallocManaged((void**)&m->dtheta, P*sizeof(real));
-  cudaMallocManaged((void**)&m->A, U*B*sizeof(real));
-  cudaMallocManaged((void**)&m->dA, U*B*sizeof(real));
-  cudaMallocManaged((void**)&m->l, B*sizeof(real));
-  cudaMallocManaged((void**)&m->ll, sizeof(real));
-  cudaMallocManaged((void**)&m->ones, B*sizeof(real));
+  sharedMalloc((void**)&m->theta, P*sizeof(real));
+  sharedMalloc((void**)&m->dtheta, P*sizeof(real));
+  sharedMalloc((void**)&m->A, U*B*sizeof(real));
+  sharedMalloc((void**)&m->dA, U*B*sizeof(real));
+  sharedMalloc((void**)&m->l, B*sizeof(real));
+  sharedMalloc((void**)&m->ll, sizeof(real));
+  sharedMalloc((void**)&m->ones, B*sizeof(real));
 
   /* convenience pointers into allocations */
   m->W = (real**)malloc(L*sizeof(real*));
@@ -88,13 +88,13 @@ void model_term(model_t* m) {
   m->Z = NULL;
   m->dZ = NULL;
 
-  cudaFree(m->theta);
-  cudaFree(m->dtheta);
-  cudaFree(m->A);
-  cudaFree(m->dA);
-  cudaFree(m->l);
-  cudaFree(m->ll);
-  cudaFree(m->ones);
+  sharedFree(m->theta);
+  sharedFree(m->dtheta);
+  sharedFree(m->A);
+  sharedFree(m->dA);
+  sharedFree(m->l);
+  sharedFree(m->ll);
+  sharedFree(m->ones);
 
   m->theta = NULL;
   m->dtheta = NULL;
