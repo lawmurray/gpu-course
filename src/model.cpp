@@ -19,21 +19,21 @@ void model_init(model_t* m, const int M, const int B, const int L,
   }
 
   /* allocate */
-  cudaMallocManaged((void**)&m->theta, P*sizeof(float), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&m->dtheta, P*sizeof(float), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&m->A, U*B*sizeof(float), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&m->dA, U*B*sizeof(float), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&m->l, B*sizeof(float), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&m->ll, sizeof(float), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&m->ones, B*sizeof(float), cudaMemAttachGlobal);
+  sharedMalloc((void**)&m->theta, P*sizeof(real));
+  sharedMalloc((void**)&m->dtheta, P*sizeof(real));
+  sharedMalloc((void**)&m->A, U*B*sizeof(real));
+  sharedMalloc((void**)&m->dA, U*B*sizeof(real));
+  sharedMalloc((void**)&m->l, B*sizeof(real));
+  sharedMalloc((void**)&m->ll, sizeof(real));
+  sharedMalloc((void**)&m->ones, B*sizeof(real));
 
   /* convenience pointers into allocations */
-  m->W = malloc(L*sizeof(float*));
-  m->dW = malloc(L*sizeof(float*));
-  m->b = malloc(L*sizeof(float*));
-  m->db = malloc(L*sizeof(float*));
-  m->Z = malloc(L*sizeof(float*));
-  m->dZ = malloc(L*sizeof(float*));
+  m->W = (real**)malloc(L*sizeof(real*));
+  m->dW = (real**)malloc(L*sizeof(real*));
+  m->b = (real**)malloc(L*sizeof(real*));
+  m->db = (real**)malloc(L*sizeof(real*));
+  m->Z = (real**)malloc(L*sizeof(real*));
+  m->dZ = (real**)malloc(L*sizeof(real*));
 
   m->W[0] = m->theta;
   m->dW[0] = m->dtheta;
@@ -88,13 +88,13 @@ void model_term(model_t* m) {
   m->Z = NULL;
   m->dZ = NULL;
 
-  cudaFree(m->theta);
-  cudaFree(m->dtheta);
-  cudaFree(m->A);
-  cudaFree(m->dA);
-  cudaFree(m->l);
-  cudaFree(m->ll);
-  cudaFree(m->ones);
+  sharedFree(m->theta);
+  sharedFree(m->dtheta);
+  sharedFree(m->A);
+  sharedFree(m->dA);
+  sharedFree(m->l);
+  sharedFree(m->ll);
+  sharedFree(m->ones);
 
   m->theta = NULL;
   m->dtheta = NULL;
@@ -112,70 +112,73 @@ void model_term(model_t* m) {
   m->u = NULL;
 }
 
-void model_forward(model_t* m, float* X, const int B) {
+void model_forward(model_t* m, real* X, const int B) {
   assert(B <= m->B);
 
-  float** W = m->W;
-  float** b = m->b;
-  float** Z = m->Z;
+  real** W = m->W;
+  real** b = m->b;
+  real** Z = m->Z;
   int M = m->M;
   int L = m->L;
   const int* u = m->u;
-  float* ones = m->ones;
+  real* ones = m->ones;
 
-  cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, u[0], B, M - 1, scalar1, W[0],
+  gemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, u[0], B, M - 1, scalar1, W[0],
       u[0], X, M, scalar0, Z[0], u[0]);
-  cublasSger(handle, u[0], B, scalar1, b[0], 1, ones, 1, Z[0], u[0]);
+  ger(handle, u[0], B, scalar1, b[0], 1, ones, 1, Z[0], u[0]);
   for (int l = 1; l < L; ++l) {
     rectify(u[l - 1], B, Z[l - 1], u[l - 1]);
-    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, u[l], B, u[l - 1], scalar1,
+    gemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, u[l], B, u[l - 1], scalar1,
         W[l], u[l], Z[l - 1], u[l - 1], scalar0, Z[l], u[l]);
-    cublasSger(handle, u[l], B, scalar1, b[l], 1, ones, 1, Z[l], u[l]);
+    ger(handle, u[l], B, scalar1, b[l], 1, ones, 1, Z[l], u[l]);
   }
 }
 
-void model_backward(model_t* m, float* X, const int B) {
+void model_backward(model_t* m, real* X, const int B) {
   assert(B <= m->B);
 
-  float** W = m->W;
-  float** dW = m->dW;
-  float** b = m->b;
-  float** db = m->db;
-  float** Z = m->Z;
-  float** dZ = m->dZ;
-  float* ones = m->ones;
+  real** W = m->W;
+  real** dW = m->dW;
+  real** b = m->b;
+  real** db = m->db;
+  real** Z = m->Z;
+  real** dZ = m->dZ;
+  real* ones = m->ones;
 
   int M = m->M;
   int L = m->L;
   const int* u = m->u;
 
-  log_likelihood_grad(B, X + M - 1, M, Z[L - 1], u[L - 1], dZ[L - 1],
-      u[L - 1]);
+  squared_error_grad(B, X + M - 1, M, Z[L - 1], 1, dZ[L - 1], 1);
   for (int l = L - 1; l > 0; --l) {
-    cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, u[l - 1], B, u[l],
+    gemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, u[l - 1], B, u[l],
         scalar1, W[l], u[l], dZ[l], u[l], scalar0, dZ[l - 1], u[l - 1]);
     rectify_grad(u[l - 1], B, Z[l - 1], u[l - 1], dZ[l - 1], u[l - 1]);
-    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, u[l], u[l - 1], B, scalar1,
+    gemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, u[l], u[l - 1], B, scalar1,
         dZ[l], u[l], Z[l - 1], u[l - 1], scalar0, dW[l], u[l]);
-    cublasSgemv(handle, CUBLAS_OP_N, u[l], B, scalar1, dZ[l], u[l], ones,
+    gemv(handle, CUBLAS_OP_N, u[l], B, scalar1, dZ[l], u[l], ones,
         1, scalar0, db[l], 1);
   }
-  cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, u[0], M - 1, B, scalar1,
+  gemm(handle, CUBLAS_OP_N, CUBLAS_OP_T, u[0], M - 1, B, scalar1,
       dZ[0], u[0], X, M, scalar0, dW[0], u[0]);
-  cublasSgemv(handle, CUBLAS_OP_N, u[0], B, scalar1, dZ[0], u[0], ones, 1,
+  gemv(handle, CUBLAS_OP_N, u[0], B, scalar1, dZ[0], u[0], ones, 1,
       scalar0, db[0], 1);
 }
 
-void model_predict(model_t* m, float* X, const int B) {
-  float** Z = m->Z;
-  float* l = m->l;
-  float* ll = m->ll;
-  float* ones = m->ones;
+void model_loss_clear(model_t* m) {
+  cudaMemcpyAsync(m->ll, scalar0, sizeof(real), cudaMemcpyDefault);
+}
+
+void model_loss_accumulate(model_t* m, real* X, const int B) {
+  real** Z = m->Z;
+  real* l = m->l;
+  real* ll = m->ll;
+  real* ones = m->ones;
   int M = m->M;
   int L = m->L;
   const int* u = m->u;
 
-  log_likelihood(B, X + M - 1, M, Z[L - 1], u[L - 1], l, 1);
-  cublasSgemv(handle, CUBLAS_OP_N, 1, B, scalar1, m->l, 1, ones, 1,
-      scalar1, m->ll, 1);
+  squared_error(B, X + M - 1, M, Z[L - 1], 1, l, 1);
+  gemv(handle, CUBLAS_OP_N, 1, B, scalar1, m->l, 1, ones, 1, scalar1, m->ll,
+      1);
 }

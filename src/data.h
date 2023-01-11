@@ -1,5 +1,7 @@
 #pragma once
 
+#include <config.h>
+
 /**
  * Data.
  */
@@ -7,22 +9,22 @@ typedef struct data_t {
   /**
    * Training data.
    */
-  float* X_train;
+  real* X_train;
 
   /**
    * Test data.
    */
-  float* X_test;
+  real* X_test;
 
   /**
    * Training data losses.
    */
-  float* l_train;
+  real* l_train;
 
   /**
    * Test data losses.
    */
-  float* l_test;
+  real* l_test;
 
   /**
    * Number of training records.
@@ -48,7 +50,7 @@ typedef struct data_t {
  * @param file Input CSV file.
  * @param split Proportion of records to randomly assign to training set.
  */
-void data_init(data_t* d, const char* file, const float split);
+void data_init(data_t* d, const char* file, const real split);
 
 /**
  * Destroy and deallocate data.

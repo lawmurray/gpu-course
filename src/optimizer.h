@@ -1,5 +1,7 @@
 #pragma once
 
+#include <config.h>
+
 /**
  * Adam optimizer.
  */
@@ -7,12 +9,12 @@ typedef struct optimizer_t {
   /**
    * First moment.
    */
-  float* m;
+  real* m;
 
   /**
    * Second moment.
    */
-  float* v;
+  real* v;
 
   /**
    * Number of parameters.
@@ -27,29 +29,29 @@ typedef struct optimizer_t {
   /**
    * Learning rate.
    */
-  float gamma;
+  real gamma;
 
   /**
    * Momentum parameter.
    */
-  float beta1;
+  real beta1;
 
   /**
    * Scaling parameter.
    */
-  float beta2;
+  real beta2;
 
   /**
    * Small constant to improve numerical stability.
    */
-  float epsilon;
+  real epsilon;
 } optimizer_t;
 
 /**
  * Iniitialize Adam optimizer.
  */
-void optimizer_init(optimizer_t* o, const int P, const float gamma,
-    const float beta1, const float beta2, const float epsilon);
+void optimizer_init(optimizer_t* o, const int P, const real gamma,
+    const real beta1, const real beta2, const real epsilon);
 
 /**
  * Destroy Adam optimizer.
@@ -59,4 +61,4 @@ void optimizer_term(optimizer_t* o);
 /**
  * Take one step of Adam optimizer.
  */
-void optimizer_step(optimizer_t* o, float* theta, float* dtheta);
+void optimizer_step(optimizer_t* o, real* theta, real* dtheta);

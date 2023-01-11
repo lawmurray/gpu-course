@@ -1,6 +1,6 @@
 #pragma once
 
-#include <data.h>
+#include <config.h>
 
 /**
  * Model.
@@ -9,64 +9,64 @@ typedef struct model_t {
   /**
    * All parameters.
    */
-  float* theta;
+  real* theta;
 
   /**
    * Gradient of all parameters.
    */
-  float* dtheta;
+  real* dtheta;
 
   /**
    * All activations.
    */
-  float* A;
+  real* A;
 
   /**
    * Gradient of all activations.
    */
-  float* dA;
+  real* dA;
 
   /**
    * Pointers into theta for individual layer weight matrices.
    */
-  float** W;
+  real** W;
 
   /**
    * Pointers into dtheta for gradients of individual layer weight matrices.
    */
-  float** dW;
+  real** dW;
 
   /**
    * Pointers into theta for individual layer bias vectors.
    */
-  float** b;
+  real** b;
 
   /**
    * Pointers into dtheta for gradients of individual layer bias vectors.
    */
-  float** db;
+  real** db;
 
   /**
    * Pointers into A for layer activations.
    */
-  float** Z;
+  real** Z;
 
   /**
    * Pointers into dA for gradients of layer activations.
    */
-  float** dZ;
+  real** dZ;
 
   /**
    * Log-likelihoods.
    */
-  float* l;
+  real* l;
 
   /**
    * Sum of log-likelihoods.
   */
-  float* ll;
+  real* ll;
 
-  float* ones;
+  real* ones;
 
   /**
    * Layer widths.
@@ -126,7 +126,7 @@ void model_term(model_t* m);
  * @param X Batch.
  * @param B Batch size.
  */
-void model_forward(model_t* m, float* X, const int B);
+void model_forward(model_t* m, real* X, const int B);
 
 /**
  * Perform backward pass.
@@ -135,13 +135,20 @@ void model_forward(model_t* m, float* X, const int B);
  * @param X Batch.
  * @param B Batch size.
  */
-void model_backward(model_t* m, float* X, const int B);
+void model_backward(model_t* m, real* X, const int B);
 
 /**
- * Perform prediction after forward pass.
+ * Reset accumulated loss to zero.
+ * 
+ * @param m Model.
+ */
+void model_loss_clear(model_t* m);
+
+/**
+ * Accumulate loss after forward pass.
  * 
  * @param m Model.
  * @param X Batch.
  * @param B Batch size.
  */
-void model_predict(model_t* m, float* X, const int B);
+void model_loss_accumulate(model_t* m, real* X, const int B);

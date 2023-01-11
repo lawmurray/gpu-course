@@ -5,8 +5,8 @@
 #include <stdlib.h>
 
 cublasHandle_t handle;
-float* scalar0;
-float* scalar1;
+real* scalar0;
+real* scalar1;
 
 int cuda_init(const int seed) {
   int device = 0, value = 0;
@@ -25,8 +25,8 @@ int cuda_init(const int seed) {
   cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
   /* initialize scalars */
-  cudaMallocManaged((void**)&scalar0, sizeof(float), cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&scalar1, sizeof(float), cudaMemAttachGlobal);
+  sharedMalloc((void**)&scalar0, sizeof(real));
+  sharedMalloc((void**)&scalar1, sizeof(real));
   *scalar0 = 0.0f;
   *scalar1 = 1.0f;
 
@@ -35,6 +35,6 @@ int cuda_init(const int seed) {
 
 void cuda_term() {
   cublasDestroy(handle);
-  cudaFree(scalar0);
-  cudaFree(scalar1);
+  sharedFree(scalar0);
+  sharedFree(scalar1);
 }
