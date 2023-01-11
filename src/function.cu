@@ -20,18 +20,18 @@ static __global__ void kernel_rectify_grad(int U, int B, const real* Z,
 
 static __global__ void kernel_squared_error(int B, const real* y, int incy,
     const real* m, int incm, real* l, int incl) {
-  int j = blockIdx.y*blockDim.y + threadIdx.y;
-  if (j < B) {
-    real z = y[j*incy] - m[j*incm];
-    l[j*incl] = z*z;
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
+  if (i < B) {
+    real z = y[i*incy] - m[i*incm];
+    l[i*incl] = z*z;
   }
 }
 
 static __global__ void kernel_squared_error_grad(int B, const real* y,
     int incy, const real* m, int incm, real* d, int incd) {
-  int j = blockIdx.y*blockDim.y + threadIdx.y;
-  if (j < B) {
-    d[j*incd] = 2.0f*(y[j*incy] - m[j*incm]);
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
+  if (i < B) {
+    d[i*incd] = 2.0f*(y[i*incy] - m[i*incm]);
   }
 }
 
@@ -65,15 +65,15 @@ void rectify_grad(int U, int B, const real* Z, int ldZ, real* dZ,
 
 void squared_error(int B, const real* y, int incy,
     const real* m, int incm, real* l, int incl) {
-  dim3 block(1, 256);
-  dim3 grid(1, (B + block.y - 1)/block.y);
+  dim3 block(256);
+  dim3 grid((B + block.y - 1)/block.y);
   kernel_squared_error<<<grid,block>>>(B, y, incy, m, incm, l, incl);
 }
 
 void squared_error_grad(int B, const real* y, int incy,
     const real* m, int incm, real* d, int incd) {
-  dim3 block(1, 256);
-  dim3 grid(1, (B + block.y - 1)/block.y);
+  dim3 block(256);
+  dim3 grid((B + block.y - 1)/block.y);
   kernel_squared_error_grad<<<grid,block>>>(B, y, incy, m, incm, d, incd);
 }
 
