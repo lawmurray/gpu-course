@@ -16,7 +16,7 @@ int main(const int argc, const char *argv[]) {
   data_init(&d, "bikeshare.csv", 0.8f);
 
   /* model */
-  int B = 1024;
+  int B = BATCH_SIZE;
   int L = 3;
   int u[] = {LAYER_WIDTH, LAYER_WIDTH, 1};
   model_t m;
