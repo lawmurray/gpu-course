@@ -18,7 +18,7 @@ int main(const int argc, const char *argv[]) {
   /* model */
   int B = 1024;
   int L = 3;
-  int u[] = {1024, 1024, 1};
+  int u[] = {LAYER_WIDTH, LAYER_WIDTH, 1};
   model_t m;
   model_init(&m, d.M, B, L, u);
 
@@ -32,7 +32,7 @@ int main(const int argc, const char *argv[]) {
   gettimeofday(&s, NULL);
 
   /* train */
-  for (int epoch = 1; epoch <= 100; ++epoch) {
+  for (int epoch = 1; epoch <= NEPOCHS; ++epoch) {
     /* iterate over training minibatches, performing gradient updates */
     for (int i = 0; i < d.N_train; i += B) {
       int b = (i + B <= d.N_train) ? B : d.N_train - i;

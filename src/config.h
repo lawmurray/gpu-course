@@ -15,6 +15,27 @@
 #define ENABLE_MANAGED 1
 
 /**
+ * @def BLOCK_SIZE
+ *
+ * Preferred thread block size (maximum 1024).
+ */
+#define BLOCK_SIZE 256
+
+/**
+ * @def LAYER_WIDTH
+ *
+ * Hidden layer width.
+ */
+#define LAYER_WIDTH 512
+
+/**
+ * @def NEPOCHS
+ *
+ * Number of epochs.
+ */
+#define NEPOCHS 100
+
+/**
  * Floating point type.
  */
 #if ENABLE_SINGLE
