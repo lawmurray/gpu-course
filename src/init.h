@@ -8,5 +8,5 @@ extern cublasHandle_t handle;
 extern real* scalar0;
 extern real* scalar1;
 
-void cuda_init(const int seed);
+int cuda_init(const int seed);
 void cuda_term();
