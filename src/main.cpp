@@ -13,12 +13,12 @@ int main(const int argc, const char *argv[]) {
 
   /* data */
   data_t d;
-  data_init(&d, "bikeshare.csv", 0.8f);
+  data_init(&d, "bikeshare.csv", 0.9f);
 
   /* model */
   int B = BATCH_SIZE;
-  int L = 3;
-  int u[] = {LAYER_WIDTH, LAYER_WIDTH, 1};
+  int L = 4;
+  int u[] = {LAYER_WIDTH, LAYER_WIDTH, LAYER_WIDTH, 1};
   model_t m;
   model_init(&m, d.M, B, L, u);
 
