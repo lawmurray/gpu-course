@@ -26,14 +26,14 @@
  *
  * Minibatch size.
  */
-#define BATCH_SIZE 256
+#define BATCH_SIZE 1024
 
 /**
  * @def LAYER_WIDTH
  *
  * Hidden layer width.
  */
-#define LAYER_WIDTH 256
+#define LAYER_WIDTH 1024
 
 /**
  * @def NEPOCHS
