@@ -44,9 +44,7 @@ static __global__ void kernel_adam(const int P, const int t, const real gamma,
     v[i] = beta2*v[i] + (1.0f - beta2)*dtheta[i]*dtheta[i];
     real mhat = m[i]/(1.0f - powf(beta1, t));
     real vhat = v[i]/(1.0f - powf(beta2, t));
-    if (vhat >= mhat*mhat) {
-      theta[i] -= gamma*mhat/(sqrtf(vhat) + epsilon);
-    }
+    theta[i] -= gamma*mhat/(sqrtf(vhat) + epsilon);
   }
 }
 
