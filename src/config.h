@@ -33,7 +33,7 @@
  *
  * Hidden layer width.
  */
-#define LAYER_WIDTH 1024
+#define LAYER_WIDTH 256
 
 /**
  * @def NEPOCHS
