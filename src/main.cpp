@@ -9,7 +9,7 @@
 
 int main(const int argc, const char *argv[]) {
   /* initialize */
-  cuda_init(1);
+  int device = cuda_init(1);
 
   /* data */
   data_t d;
