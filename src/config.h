@@ -7,14 +7,6 @@
 #define ENABLE_SINGLE 1
 
 /**
- * @def ENABLE_MANAGED
- *
- * Enable managed memory"? Set to 1 to use managed memory, or 0 to use pinned
- * host memory.
- */
-#define ENABLE_MANAGED 1
-
-/**
  * @def BLOCK_SIZE
  *
  * Preferred thread block size (maximum 1024).
