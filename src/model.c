@@ -19,13 +19,13 @@ void model_init(model_t* m, const int M, const int B, const int L,
   }
 
   /* allocate */
-  sharedMalloc((void**)&m->theta, P*sizeof(real));
-  sharedMalloc((void**)&m->dtheta, P*sizeof(real));
-  sharedMalloc((void**)&m->A, U*B*sizeof(real));
-  sharedMalloc((void**)&m->dA, U*B*sizeof(real));
-  sharedMalloc((void**)&m->l, B*sizeof(real));
-  sharedMalloc((void**)&m->ll, sizeof(real));
-  sharedMalloc((void**)&m->ones, B*sizeof(real));
+  cudaMallocManaged((void**)&m->theta, P*sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->dtheta, P*sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->A, U*B*sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->dA, U*B*sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->l, B*sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->ll, sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&m->ones, B*sizeof(real), cudaMemAttachGlobal);
 
   /* convenience pointers into allocations */
   m->W = (real**)malloc(L*sizeof(real*));
@@ -88,13 +88,13 @@ void model_term(model_t* m) {
   m->Z = NULL;
   m->dZ = NULL;
 
-  sharedFree(m->theta);
-  sharedFree(m->dtheta);
-  sharedFree(m->A);
-  sharedFree(m->dA);
-  sharedFree(m->l);
-  sharedFree(m->ll);
-  sharedFree(m->ones);
+  cudaFree(m->theta);
+  cudaFree(m->dtheta);
+  cudaFree(m->A);
+  cudaFree(m->dA);
+  cudaFree(m->l);
+  cudaFree(m->ll);
+  cudaFree(m->ones);
 
   m->theta = NULL;
   m->dtheta = NULL;
@@ -166,7 +166,8 @@ void model_backward(model_t* m, real* X, const int B) {
 }
 
 void model_loss_clear(model_t* m) {
-  cudaMemcpyAsync(m->ll, scalar0, sizeof(real), cudaMemcpyDefault);
+  cudaMemcpyAsync(m->ll, scalar0, sizeof(real), cudaMemcpyDefault,
+      cudaStreamDefault);
 }
 
 void model_loss_accumulate(model_t* m, real* X, const int B) {

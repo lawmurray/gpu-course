@@ -13,15 +13,15 @@ void optimizer_init(optimizer_t* o, const int P, const real gamma,
   o->beta2 = beta2;
   o->epsilon = epsilon;
 
-  sharedMalloc((void**)&o->m, P*sizeof(real));
-  sharedMalloc((void**)&o->v, P*sizeof(real));
+  cudaMallocManaged((void**)&o->m, P*sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&o->v, P*sizeof(real), cudaMemAttachGlobal);
   cudaMemset(o->m, 0, P*sizeof(real));
   cudaMemset(o->v, 0, P*sizeof(real));
 }
 
 void optimizer_term(optimizer_t* o) {
-  sharedFree(o->v);
-  sharedFree(o->m);
+  cudaFree(o->v);
+  cudaFree(o->m);
   o->v = NULL;
   o->m = NULL;
   o->P = 0;

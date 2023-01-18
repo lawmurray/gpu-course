@@ -23,8 +23,7 @@ void rectify(int U, int B, real* Z, int ldZ);
  * on output the partial derivative with respect to $Z$.
  * @param lddZ Stride between columns of @p dZ (lead).
  */
-void rectify_grad(int U, int B, const real* Z, int ldZ, real* dZ,
-    int lddZ);
+void rectify_grad(int U, int B, const real* Z, int ldZ, real* dZ, int lddZ);
 
 /**
  * Squared error loss.

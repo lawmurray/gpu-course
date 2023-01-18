@@ -63,14 +63,3 @@ typedef double real;
 #define gemv cublasDgemv
 #define gemm cublasDgemm
 #endif
-
-/*
- * Memory allocation function name mappings for managed to pinned host memory.
- */
-#if ENABLE_MANAGED
-#define sharedMalloc cudaMallocManaged
-#define sharedFree cudaFree
-#else
-#define sharedMalloc cudaMallocHost
-#define sharedFree cudaFreeHost
-#endif

@@ -1,5 +1,7 @@
 #include <config.h>
 
+extern "C" {
+
 static __global__ void kernel_rectify(int U, int B, real* Z, int ldZ) {
   int i = blockIdx.x*blockDim.x + threadIdx.x;
   int j = blockIdx.y*blockDim.y + threadIdx.y;
@@ -82,4 +84,6 @@ void adam(const int P, const int t, const real gamma,
   dim3 grid((P + block.x - 1)/block.x);
   kernel_adam<<<grid,block>>>(P, t, gamma, beta1, beta2, epsilon, m, v,
       theta, dtheta);
+}
+
 }

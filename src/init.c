@@ -25,8 +25,8 @@ int cuda_init(const int seed) {
   cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
   /* initialize scalars */
-  sharedMalloc((void**)&scalar0, sizeof(real));
-  sharedMalloc((void**)&scalar1, sizeof(real));
+  cudaMallocManaged((void**)&scalar0, sizeof(real), cudaMemAttachGlobal);
+  cudaMallocManaged((void**)&scalar1, sizeof(real), cudaMemAttachGlobal);
   *scalar0 = 0.0f;
   *scalar1 = 1.0f;
 
@@ -35,6 +35,6 @@ int cuda_init(const int seed) {
 
 void cuda_term() {
   cublasDestroy(handle);
-  sharedFree(scalar0);
-  sharedFree(scalar1);
+  cudaFree(scalar0);
+  cudaFree(scalar1);
 }
