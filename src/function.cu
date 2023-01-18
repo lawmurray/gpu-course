@@ -1,5 +1,8 @@
 #include <config.h>
 
+/* nvcc compiles *.cu files as C++, whereas the remainder of our source code
+ * is in C; this ensures that we get C external linkage so that we can easily
+ * call the functions in this file from C code, not just C++ code */
 extern "C" {
 
 __global__ void kernel_rectify(int U, int B, real* Z, int ldZ) {
