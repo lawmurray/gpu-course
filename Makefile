@@ -13,7 +13,7 @@ src/main.o: src/model.cpp src/config.h src/init.h src/data.h src/model.h src/opt
 src/model.o: src/model.cpp src/config.h src/model.h
 src/data.o: src/data.cpp src/config.h src/data.h
 src/optimizer.o: src/optimizer.cpp src/config.h src/optimizer.h
-src/init.o: src/init.cpp src/config.h src/init.h
+src/init.o: src/init.cu src/config.h src/init.h
 src/function.o: src/function.cu src/config.h src/function.h
 
 clean:

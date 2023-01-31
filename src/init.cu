@@ -8,6 +8,9 @@ cublasHandle_t handle;
 real* scalar0;
 real* scalar1;
 
+__constant__ real constant0 = 0.0f;
+__constant__ real constant1 = 1.0f;
+
 int cuda_init(const int seed) {
   int device = 0, value = 0;
   cudaGetDevice(&device);
@@ -25,10 +28,8 @@ int cuda_init(const int seed) {
   cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
   /* initialize scalars */
-  sharedMalloc((void**)&scalar0, sizeof(real));
-  sharedMalloc((void**)&scalar1, sizeof(real));
-  *scalar0 = 0.0f;
-  *scalar1 = 1.0f;
+  cudaGetSymbolAddress((void**)&scalar0, constant0);
+  cudaGetSymbolAddress((void**)&scalar1, constant1);
 
   return device;
 }
