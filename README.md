@@ -13,6 +13,11 @@ License. You may obtain a copy of the License at
 
 ## Build and run
 
+The code requires:
+- Linux.
+- [CUDA](https://developer.nvidia.com/cuda-downloads).
+- An Nvidia GPU of the Pascal generation (circa 2016) or later. Specifically, the code makes use of unified virtual memory, and only from the Pascal generation forward can the hardware coherently handle managed memory and kernel execution concurrently.
+
 To build, use:
 
     make
