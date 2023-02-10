@@ -2,6 +2,13 @@
 
 This code accompanies the course [Foundations of GPU Computing](https://indii.org/gpu-course/) (coming soon). It implements a simple feed-forward neural network in C, using CUDA language extensions and the cuBLAS library to run on GPU. The purpose of using C is to reinforce the foundational lessons of the course, forcing us to be explicit about each step: each memory allocation, each kernel call, each stream synchronization.
 
+## License
+
+This code is open source software. It is licensed under the Apache License,
+Version 2.0 (the "License"); you may not use it except in compliance with the
+License. You may obtain a copy of the License at
+<http://www.apache.org/licenses/LICENSE-2.0>.
+
 ## Build and run
 
 To build, use:
