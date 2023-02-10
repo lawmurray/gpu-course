@@ -1,6 +1,8 @@
 # Foundations of GPU Computing: Example Code
 
-This code accompanies the course [Foundations of GPU Computing](https://indii.org/gpu-course/) (coming soon). It implements a simple feed-forward neural network in C, using CUDA language extensions and the cuBLAS library to run on GPU. The purpose of using C is to reinforce the foundational lessons of the course, forcing us to be explicit about each step: each memory allocation, each kernel call, each stream synchronization.
+This code accompanies the course [Foundations of GPU Computing](https://indii.org/gpu-course/) (coming soon). It implements a simple feed-forward neural network in C, using CUDA and cuBLAS to run on Nvidia GPUs. The code includes the forward and backward (gradient) passes, and an Adam optimizer for training.
+
+The purpose of using C is to reinforce the foundational lessons of the course, forcing us to be explicit about each step: each memory allocation, each kernel call, each stream synchronization.
 
 ## License
 
