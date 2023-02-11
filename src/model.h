@@ -9,64 +9,64 @@ typedef struct model_t {
   /**
    * All parameters.
    */
-  real* theta;
+  float* theta;
 
   /**
    * Gradient of all parameters.
    */
-  real* dtheta;
+  float* dtheta;
 
   /**
    * All activations.
    */
-  real* A;
+  float* A;
 
   /**
    * Gradient of all activations.
    */
-  real* dA;
+  float* dA;
 
   /**
    * Pointers into theta for individual layer weight matrices.
    */
-  real** W;
+  float** W;
 
   /**
    * Pointers into dtheta for gradients of individual layer weight matrices.
    */
-  real** dW;
+  float** dW;
 
   /**
    * Pointers into theta for individual layer bias vectors.
    */
-  real** b;
+  float** b;
 
   /**
    * Pointers into dtheta for gradients of individual layer bias vectors.
    */
-  real** db;
+  float** db;
 
   /**
    * Pointers into A for layer activations.
    */
-  real** Z;
+  float** Z;
 
   /**
    * Pointers into dA for gradients of layer activations.
    */
-  real** dZ;
+  float** dZ;
 
   /**
    * Log-likelihoods.
    */
-  real* l;
+  float* l;
 
   /**
    * Sum of log-likelihoods.
   */
-  real* ll;
+  float* ll;
 
-  real* ones;
+  float* ones;
 
   /**
    * Layer widths.
@@ -126,7 +126,7 @@ void model_term(model_t* m);
  * @param X Batch.
  * @param B Batch size.
  */
-void model_forward(model_t* m, real* X, const int B);
+void model_forward(model_t* m, float* X, const int B);
 
 /**
  * Perform backward pass.
@@ -135,7 +135,7 @@ void model_forward(model_t* m, real* X, const int B);
  * @param X Batch.
  * @param B Batch size.
  */
-void model_backward(model_t* m, real* X, const int B);
+void model_backward(model_t* m, float* X, const int B);
 
 /**
  * Reset accumulated loss to zero.
@@ -151,4 +151,4 @@ void model_loss_clear(model_t* m);
  * @param X Batch.
  * @param B Batch size.
  */
-void model_loss_accumulate(model_t* m, real* X, const int B);
+void model_loss_accumulate(model_t* m, float* X, const int B);

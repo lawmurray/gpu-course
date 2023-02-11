@@ -1,10 +1,12 @@
+#pragma once
+
 /**
- * @def ENABLE_SINGLE
+ * @def ENABLE_DOUBLE
  * 
- * Enable single precision? Set to 1 to use single precision, or 0 to use
- * double precision.
+ * Enable double precision? Set to 1 to use double precision, or 0 to use
+ * single precision.
  */
-#define ENABLE_SINGLE 1
+#define ENABLE_DOUBLE 0
 
 /**
  * @def BLOCK_SIZE
@@ -34,24 +36,12 @@
  */
 #define NEPOCHS 100
 
-/**
- * Floating point type.
- */
-#if ENABLE_SINGLE
-typedef float real;
-#else
-typedef double real;
-#endif
-
-/*
- * CUBLAS function name mappings for single or double precision.
- */
-#if ENABLE_SINGLE
-#define ger cublasSger
-#define gemv cublasSgemv
-#define gemm cublasSgemm
-#else
-#define ger cublasDger
-#define gemv cublasDgemv
-#define gemm cublasDgemm
+#if ENABLE_DOUBLE
+#define float double
+#undef cublasSger
+#undef cublasSgemv
+#undef cublasSgemm
+#define cublasSger cublasDger
+#define cublasSgemv cublasDgemv
+#define cublasSgemm cublasDgemm
 #endif

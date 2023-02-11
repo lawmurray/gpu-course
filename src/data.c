@@ -1,16 +1,16 @@
-#include <data.h>
-#include <function.h>
-
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-void data_init(data_t* data, const char* file, const real split) {
+#include <data.h>
+#include <function.h>
+
+void data_init(data_t* data, const char* file, const float split) {
   assert(0.0f <= split && split <= 1.0f);
 
-  real* X = NULL;  // buffer to fill
+  float* X = NULL;  // buffer to fill
   int M = 0;  // number of fields, computed from first record
   int N = 0;  // number of records
   
@@ -26,7 +26,7 @@ void data_init(data_t* data, const char* file, const real split) {
     int m = 0;
     char* token = strtok(line, ",");
     while (token) {
-      X = (real*)realloc(X, (N*M + m + 1)*sizeof(real));
+      X = (float*)realloc(X, (N*M + m + 1)*sizeof(float));
       X[M*N + m] = atof(token);
       ++m;
       token = strtok(NULL, ",");
@@ -46,18 +46,18 @@ void data_init(data_t* data, const char* file, const real split) {
   int N_train = split*N;
   int N_test = N - N_train;
 
-  cudaMallocManaged((void**)&data->X_train, M*N_train*sizeof(real),
+  cudaMallocManaged((void**)&data->X_train, M*N_train*sizeof(float),
       cudaMemAttachGlobal);
-  cudaMemcpy(data->X_train, X, M*N_train*sizeof(real), cudaMemcpyDefault);
-  cudaMallocManaged((void**)&data->X_test, M*N_test*sizeof(real),
+  cudaMemcpy(data->X_train, X, M*N_train*sizeof(float), cudaMemcpyDefault);
+  cudaMallocManaged((void**)&data->X_test, M*N_test*sizeof(float),
       cudaMemAttachGlobal);
-  cudaMemcpy(data->X_test, X + N_train, M*N_test*sizeof(real),
+  cudaMemcpy(data->X_test, X + N_train, M*N_test*sizeof(float),
       cudaMemcpyDefault);
   free(X);
 
-  cudaMallocManaged((void**)&data->l_train, N_train*sizeof(real),
+  cudaMallocManaged((void**)&data->l_train, N_train*sizeof(float),
       cudaMemAttachGlobal);
-  cudaMallocManaged((void**)&data->l_test, N_test*sizeof(real),
+  cudaMallocManaged((void**)&data->l_test, N_test*sizeof(float),
       cudaMemAttachGlobal);
 
   data->N_train = N_train;
@@ -81,14 +81,14 @@ void data_term(data_t* data) {
 }
 
 void data_shuffle(data_t* data) {
-  real* X = data->X_train;
+  float* X = data->X_train;
   int N = data->N_train;
   int M = data->M;
 
   for (int i = 0; i < N - 1; ++i) {
     int j = i + (lrand48() % (N - i));
     for (int k = 0; k < M; ++k) {
-      real tmp = X[M*i + k];
+      float tmp = X[M*i + k];
       X[M*i + k] = X[M*j + k];
       X[M*j + k] = tmp;
     }

@@ -9,22 +9,22 @@ typedef struct data_t {
   /**
    * Training data.
    */
-  real* X_train;
+  float* X_train;
 
   /**
    * Test data.
    */
-  real* X_test;
+  float* X_test;
 
   /**
    * Training data losses.
    */
-  real* l_train;
+  float* l_train;
 
   /**
    * Test data losses.
    */
-  real* l_test;
+  float* l_test;
 
   /**
    * Number of training records.
@@ -50,7 +50,7 @@ typedef struct data_t {
  * @param file Input CSV file.
  * @param split Proportion of records to randomly assign to training set.
  */
-void data_init(data_t* d, const char* file, const real split);
+void data_init(data_t* d, const char* file, const float split);
 
 /**
  * Destroy and deallocate data.

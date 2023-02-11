@@ -9,12 +9,12 @@ typedef struct optimizer_t {
   /**
    * First moment.
    */
-  real* m;
+  float* m;
 
   /**
    * Second moment.
    */
-  real* v;
+  float* v;
 
   /**
    * Number of parameters.
@@ -29,29 +29,29 @@ typedef struct optimizer_t {
   /**
    * Learning rate.
    */
-  real gamma;
+  float gamma;
 
   /**
    * Momentum parameter.
    */
-  real beta1;
+  float beta1;
 
   /**
    * Scaling parameter.
    */
-  real beta2;
+  float beta2;
 
   /**
    * Small constant to improve numerical stability.
    */
-  real epsilon;
+  float epsilon;
 } optimizer_t;
 
 /**
  * Iniitialize Adam optimizer.
  */
-void optimizer_init(optimizer_t* o, const int P, const real gamma,
-    const real beta1, const real beta2, const real epsilon);
+void optimizer_init(optimizer_t* o, const int P, const float gamma,
+    const float beta1, const float beta2, const float epsilon);
 
 /**
  * Destroy Adam optimizer.
@@ -61,4 +61,4 @@ void optimizer_term(optimizer_t* o);
 /**
  * Take one step of Adam optimizer.
  */
-void optimizer_step(optimizer_t* o, real* theta, real* dtheta);
+void optimizer_step(optimizer_t* o, float* theta, float* dtheta);

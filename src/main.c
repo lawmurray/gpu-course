@@ -1,11 +1,13 @@
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+
 #include <init.h>
 #include <data.h>
 #include <model.h>
 #include <optimizer.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
 
 int main(const int argc, const char *argv[]) {
   /* initialize */
@@ -51,9 +53,9 @@ int main(const int argc, const char *argv[]) {
 
     /* finalize loss and report progress */
     cudaDeviceSynchronize();
-    real loss = *m.ll/d.N_test;    
+    float loss = *m.ll/d.N_test;    
     gettimeofday(&e, NULL);
-    real elapsed = (e.tv_sec - s.tv_sec) + 1.0e-6f*(e.tv_usec - s.tv_usec);
+    float elapsed = (e.tv_sec - s.tv_sec) + 1.0e-6f*(e.tv_usec - s.tv_usec);
     fprintf(stderr, "epoch %d: test loss %f, elapsed %0.4fs\n", epoch, loss,
         elapsed);
 

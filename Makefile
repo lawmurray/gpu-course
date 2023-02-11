@@ -1,6 +1,7 @@
 # compile flags
+CPPFLAGS=-Wno-macro-redefined
 CFLAGS=-Isrc -I/usr/local/cuda/include -O3 -g
-NVCCFLAGS=-allow-unsupported-compiler -Xcompiler=-Wall
+NVCCFLAGS=-Isrc -I/usr/local/cuda/include -O3 -g -allow-unsupported-compiler -Xcompiler=-Wall -Xcompiler=-Wno-macro-redefined
 
 # link flags
 LDFLAGS=-L/usr/local/cuda/lib64
@@ -23,4 +24,4 @@ src/function.o: src/function.cu src/config.h src/function.h
 
 # pattern rule to compile an object file from a CUDA source file
 %.o : %.cu
-	nvcc $(NVCCFLAGS) -Xcompiler=-Wall $(CFLAGS) -c -o $@ $<
+	nvcc $(NVCCFLAGS) -c -o $@ $<
