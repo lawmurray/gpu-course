@@ -6,6 +6,9 @@ NVCCFLAGS=-Isrc -I/usr/local/cuda/include -O3 -g -allow-unsupported-compiler -Xc
 # link flags
 LDFLAGS=-L/usr/local/cuda/lib64
 
+# default build
+all: main discrete
+
 # build the main program
 main: src/main.o src/model.o src/data.o src/optimizer.o src/init.o src/function.o
 	nvcc $(NVCCFLAGS) $(LDFLAGS) -o $@ $^ -lcublas
