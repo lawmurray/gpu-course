@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cublas_v2.h>
 #include <config.h>
 
 extern cublasHandle_t handle;
