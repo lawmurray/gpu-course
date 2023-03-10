@@ -68,14 +68,14 @@ void rectify_grad(int U, int B, const float* Z, int ldZ, float* dZ, int lddZ) {
 void squared_error(int B, const float* y, int incy, const float* m, int incm,
     float* l, int incl) {
   dim3 block(BLOCK_SIZE);
-  dim3 grid((B + block.y - 1)/block.y);
+  dim3 grid((B + block.x - 1)/block.x);
   kernel_squared_error<<<grid,block>>>(B, y, incy, m, incm, l, incl);
 }
 
 void squared_error_grad(int B, const float* y, int incy, const float* m,
     int incm, float* d, int incd) {
   dim3 block(BLOCK_SIZE);
-  dim3 grid((B + block.y - 1)/block.y);
+  dim3 grid((B + block.x - 1)/block.x);
   kernel_squared_error_grad<<<grid,block>>>(B, y, incy, m, incm, d, incd);
 }
 
