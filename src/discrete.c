@@ -40,15 +40,44 @@ int main(const int argc, const char *argv[]) {
   cudaMemPrefetchAsync(q, n*sizeof(float), device, cudaStreamDefault);
   cudaMemPrefetchAsync(r, (m + n - 1)*sizeof(float), device, cudaStreamDefault);
 
-  /* start timer */
   struct timeval s, e;
+
+  /* v0 */
   cudaDeviceSynchronize();
   gettimeofday(&s, NULL);
-
-  /* end timer */
+  convolve_v0(m, n, p, 1, q, 1, r, 1);
+  cudaDeviceSynchronize();
   gettimeofday(&e, NULL);
-  float elapsed = (e.tv_sec - s.tv_sec) + 1.0e-6f*(e.tv_usec - s.tv_usec);
-  fprintf(stderr, "elapsed %0.4fs\n", elapsed);
+  float elapsed_v0 = (e.tv_sec - s.tv_sec)*1.0e6 + (e.tv_usec - s.tv_usec);
+
+  /* v1 */
+  cudaDeviceSynchronize();
+  gettimeofday(&s, NULL);
+  convolve_v1(m, n, p, 1, q, 1, r, 1);
+  cudaDeviceSynchronize();
+  gettimeofday(&e, NULL);
+  float elapsed_v1 = (e.tv_sec - s.tv_sec)*1.0e6 + (e.tv_usec - s.tv_usec);
+
+  /* v2 */
+  cudaDeviceSynchronize();
+  gettimeofday(&s, NULL);
+  convolve_v2(m, n, p, 1, q, 1, r, 1);
+  cudaDeviceSynchronize();
+  gettimeofday(&e, NULL);
+  float elapsed_v2 = (e.tv_sec - s.tv_sec)*1.0e6 + (e.tv_usec - s.tv_usec);
+
+  /* v3 */
+  cudaDeviceSynchronize();
+  gettimeofday(&s, NULL);
+  convolve_v3(m, n, p, 1, q, 1, r, 1);
+  cudaDeviceSynchronize();
+  gettimeofday(&e, NULL);
+  float elapsed_v3 = (e.tv_sec - s.tv_sec)*1.0e6 + (e.tv_usec - s.tv_usec);
+
+  fprintf(stderr, "v0 %0.4fus\n", elapsed_v0);
+  fprintf(stderr, "v1 %0.4fus\n", elapsed_v1);
+  fprintf(stderr, "v2 %0.4fus\n", elapsed_v2);
+  fprintf(stderr, "v3 %0.4fus\n", elapsed_v3);
 
   /* clean up */
   cuda_term();
