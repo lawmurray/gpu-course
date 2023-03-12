@@ -195,7 +195,7 @@ void convolve_v3(const int m, const int n, const float* p, const int incp,
     m1 = n;
     n1 = m;
   }
-  dim3 block(32, BLOCK_SIZE/32);
+  dim3 block(32, 16);
   dim3 grid(1, (m1 + block.y - 1)/block.y);
   size_t shared = block.x*block.y*sizeof(float);
   kernel_convolve_v3<<<grid,block,shared>>>(m1, n1, p1, incp1, q1, incq1, r, incr);
