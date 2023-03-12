@@ -39,8 +39,8 @@ __global__ void kernel_convolve_v1(const int m, const int n, const float* p,
       }
     }
     r[i] = result1;
-    if (i < m - 1) {
-      r[i + n] = result2;
+    if (i < n - 1) {
+      r[i + m] = result2;
     }
   }
 }
@@ -73,8 +73,8 @@ __global__ void kernel_convolve_v2(const int m, const int n, const float* p,
   }
   if (i < m) {
     r[i] = result1;
-    if (i < m - 1) {
-      r[i + n] = result2;
+    if (i < n - 1) {
+      r[i + m] = result2;
     }
   }
 }
@@ -117,8 +117,8 @@ __global__ void kernel_convolve_v3(const int m, const int n, const float* p,
   /* set the final result, only first thread in each warp */
   if (i < m && threadIdx.x == 0) {
     r[i] = result1;
-    if (i < m - 1) {
-      r[i + n] = result2;
+    if (i < n - 1) {
+      r[i + m] = result2;
     }
   }
 }
