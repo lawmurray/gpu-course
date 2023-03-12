@@ -11,69 +11,71 @@ __global__ void kernel_convolve_v0(const int m, const int n, const float* p,
     const int incr) {
   /* element of r for which thread is responsible */
   int i = threadIdx.y + blockIdx.y*blockDim.y;
-  
-  /* sum across elements in each thread */
-  float result = 0.0f;
-  for (int j = 0; j < n; ++j) {
-    if (0 <= i - j && i - j < m) {
-      result += p[(i - j)*incp]*q[j*incq];
+
+  if (i < m + n - 1) {
+    float result = 0.0f;
+    for (int j = 0; j < n; ++j) {
+      if (0 <= i - j && i - j < m) {
+        result += p[(i - j)*incp]*q[j*incq];
+      }
     }
+    r[i] = result;
   }
-  
-  /* write element */
-  r[i] = result;
 }
 
 __global__ void kernel_convolve_v1(const int m, const int n, const float* p,
     const int incp, const float* q, const int incq, float* r,
     const int incr) {
-  /* first element of r for which thread is responsible */
+  /* element of r for which thread is responsible */
   int i = threadIdx.y + blockIdx.y*blockDim.y;
   
-  /* sum across elements in each thread */
-  float result1 = 0.0f, result2 = 0.0f;
-  for (int j = 0; j < n; ++j) {
-    if (0 <= i - j) {
-      result1 += p[(i - j)*incp]*q[j*incq];
-    } else {
-      result2 += p[(m + i - j)*incp]*q[j*incq];
+  if (i < m) {
+    float result1 = 0.0f, result2 = 0.0f;
+    for (int j = 0; j < n; ++j) {
+      if (0 <= i - j) {
+        result1 += p[(i - j)*incp]*q[j*incq];
+      } else {
+        result2 += p[(m + i - j)*incp]*q[j*incq];
+      }
     }
-  }
-  
-  /* write elements */
-  r[i] = result1;
-  if (i < m - 1) {
-    r[i + m] = result2;
+    r[i] = result1;
+    if (i < m - 1) {
+      r[i + n] = result2;
+    }
   }
 }
 
 __global__ void kernel_convolve_v2(const int m, const int n, const float* p,
     const int incp, const float* q, const int incq, float* r,
     const int incr) {
-  __shared__ float* q_shared;
+  /* shared memory */
+  extern __shared__ float q_shared[];
+
+  /* element of r for which thread is responsible */
   int i = threadIdx.y + blockIdx.y*blockDim.y;
+
   float result1 = 0.0f, result2 = 0.0f;
-  
   for (int base = 0; base < n; base += blockDim.y) {
-    /* read the next batch into shared memory */
     int j = threadIdx.y;
-    q_shared[j] = base + j < n ? q[(base + j)*incq] : 0.0f;
+    __syncthreads();
+    q_shared[j] = (base + j < n) ? q[(base + j)*incq] : 0.0f;
     __syncthreads();
 
-    /* sum across elements in each thread  */
-    for (j = 0; j < blockDim.y; ++j) {
-      if (0 <= i - j) {
-        result1 += p[(base + i - j)*incp]*q_shared[j];
-      } else {
-        result2 += p[(base + m + i - j)*incp]*q_shared[j];
+    if (i < m) {
+      for (j = 0; j < blockDim.y; ++j) {
+        if (0 <= i - base - j) {
+          result1 += p[(i - base - j)*incp]*q_shared[j];
+        } else {
+          result2 += p[(m + i - base - j)*incp]*q_shared[j];
+        }
       }
     }
   }
-
-  /* set the final result */
-  r[i] = result1;
-  if (i < m - 1) {
-    r[i + m] = result2;
+  if (i < m) {
+    r[i] = result1;
+    if (i < m - 1) {
+      r[i + n] = result2;
+    }
   }
 }
 
@@ -82,23 +84,26 @@ __global__ void kernel_convolve_v3(const int m, const int n, const float* p,
     const int incr) {
   assert(blockDim.x == warpSize && gridDim.x == 1);
 
-  __shared__ float* q_shared;
-  int i = blockIdx.x*blockDim.x;
+  /* shared memory */
+  extern __shared__ float q_shared[];
+
+  /* element of r for which warp is responsible */
+  int i = threadIdx.y + blockIdx.y*blockDim.y;
+
   float result1 = 0.0f, result2 = 0.0f;
-  
   for (int base = 0; base < n; base += warpSize*blockDim.y) {
-    /* read the next batch into shared memory */
     int j = threadIdx.y*warpSize + threadIdx.x;
-    q_shared[j] = base + j < n ? q[(base + j)*incq] : 0.0f;
+    __syncthreads();
+    q_shared[j] = (base + j < n) ? q[(base + j)*incq] : 0.0f;
     __syncthreads();
 
-    /* sum across elements in each thread  */
-    for (j = threadIdx.x; j < warpSize*blockDim.y; j += warpSize) {
-      /* read the next batch into shared memory */
-      if (0 <= i - j) {
-        result1 += p[(base + i - j)*incp]*q_shared[j];
-      } else {
-        result2 += p[(base + m + i - j)*incp]*q_shared[j];
+    if (i < m) {
+      for (j = threadIdx.x; j < warpSize*blockDim.y; j += warpSize) {
+        if (0 <= i - base - j) {
+          result1 += p[(i - base - j)*incp]*q_shared[j];
+        } else {
+          result2 += p[(m + i - base - j)*incp]*q_shared[j];
+        }
       }
     }
   }
@@ -110,10 +115,10 @@ __global__ void kernel_convolve_v3(const int m, const int n, const float* p,
   }
 
   /* set the final result, only first thread in each warp */
-  if (threadIdx.x == 0) {
+  if (i < m && threadIdx.x == 0) {
     r[i] = result1;
     if (i < m - 1) {
-      r[i + m] = result2;
+      r[i + n] = result2;
     }
   }
 }
@@ -142,9 +147,9 @@ void convolve_v2(const int m, const int n, const float* p, const int incp,
 
 void convolve_v3(const int m, const int n, const float* p, const int incp,
     const float* q, const int incq, float* r, const int incr) {
-  dim3 block(32, BLOCK_SIZE);
+  dim3 block(32, BLOCK_SIZE/32);
   dim3 grid(1, (m + block.y - 1)/block.y);
-  size_t shared = block.y*sizeof(float);
+  size_t shared = block.x*block.y*sizeof(float);
   kernel_convolve_v3<<<grid,block,shared>>>(m, n, p, incp, q, incq, r, incr);
 }
 
