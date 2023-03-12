@@ -125,32 +125,80 @@ __global__ void kernel_convolve_v3(const int m, const int n, const float* p,
 
 void convolve_v0(const int m, const int n, const float* p, const int incp,
     const float* q, const int incq, float* r, const int incr) {
+  const float *p1 = p, *q1 = q;
+  int incp1 = incp, incq1 = incq;
+  int m1 = m, n1 = n;
+  if (n > m) {
+    /* swap to put largest vector on the left */
+    p1 = q;
+    q1 = p;
+    incp1 = incq;
+    incq1 = incp;
+    m1 = n;
+    n1 = m;
+  }
   dim3 block(1, BLOCK_SIZE);
-  dim3 grid(1, (m + n - 1 + block.y - 1)/block.y);
-  kernel_convolve_v0<<<grid,block>>>(m, n, p, incp, q, incq, r, incr);
+  dim3 grid(1, (m1 + n1 - 1 + block.y - 1)/block.y);
+  kernel_convolve_v0<<<grid,block>>>(m1, n1, p1, incp1, q1, incq1, r, incr);
 }
 
 void convolve_v1(const int m, const int n, const float* p, const int incp,
     const float* q, const int incq, float* r, const int incr) {
+  const float *p1 = p, *q1 = q;
+  int incp1 = incp, incq1 = incq;
+  int m1 = m, n1 = n;
+  if (n > m) {
+    /* swap to put largest vector on the left */
+    p1 = q;
+    q1 = p;
+    incp1 = incq;
+    incq1 = incp;
+    m1 = n;
+    n1 = m;
+  }
   dim3 block(1, BLOCK_SIZE);
-  dim3 grid(1, (m + block.y - 1)/block.y);
-  kernel_convolve_v1<<<grid,block>>>(m, n, p, incp, q, incq, r, incr);
+  dim3 grid(1, (m1 + block.y - 1)/block.y);
+  kernel_convolve_v1<<<grid,block>>>(m1, n1, p1, incp1, q1, incq1, r, incr);
 }
 
 void convolve_v2(const int m, const int n, const float* p, const int incp,
     const float* q, const int incq, float* r, const int incr) {
+  const float *p1 = p, *q1 = q;
+  int incp1 = incp, incq1 = incq;
+  int m1 = m, n1 = n;
+  if (n > m) {
+    /* swap to put largest vector on the left */
+    p1 = q;
+    q1 = p;
+    incp1 = incq;
+    incq1 = incp;
+    m1 = n;
+    n1 = m;
+  }
   dim3 block(1, BLOCK_SIZE);
-  dim3 grid(1, (m + block.y - 1)/block.y);
+  dim3 grid(1, (m1 + block.y - 1)/block.y);
   size_t shared = block.y*sizeof(float);
-  kernel_convolve_v2<<<grid,block,shared>>>(m, n, p, incp, q, incq, r, incr);
+  kernel_convolve_v2<<<grid,block,shared>>>(m1, n1, p1, incp1, q1, incq1, r, incr);
 }
 
 void convolve_v3(const int m, const int n, const float* p, const int incp,
     const float* q, const int incq, float* r, const int incr) {
+  const float *p1 = p, *q1 = q;
+  int incp1 = incp, incq1 = incq;
+  int m1 = m, n1 = n;
+  if (n > m) {
+    /* swap to put largest vector on the left */
+    p1 = q;
+    q1 = p;
+    incp1 = incq;
+    incq1 = incp;
+    m1 = n;
+    n1 = m;
+  }
   dim3 block(32, BLOCK_SIZE/32);
-  dim3 grid(1, (m + block.y - 1)/block.y);
+  dim3 grid(1, (m1 + block.y - 1)/block.y);
   size_t shared = block.x*block.y*sizeof(float);
-  kernel_convolve_v3<<<grid,block,shared>>>(m, n, p, incp, q, incq, r, incr);
+  kernel_convolve_v3<<<grid,block,shared>>>(m1, n1, p1, incp1, q1, incq1, r, incr);
 }
 
 }
