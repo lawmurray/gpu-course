@@ -129,48 +129,53 @@ __global__ void kernel_convolve_v4(const int m, const int n, const float* p,
   /* shared memory */
   extern __shared__ float shared[];
   float* q_shared = shared;
-  float* p1_shared = q_shared + 2*blockDim.y;  // permits -ve indices
-  float* p2_shared = p1_shared + 2*blockDim.y; // permits -ve indices
+  float* p_shared = q_shared + 2*blockDim.y;  // permits -ve indices
 
   /* element of r for which thread is responsible */
   int base_i = blockIdx.y*blockDim.y;
   int base_j = 0;
-  int offset_i = blockDim.y;
   int i = threadIdx.y;
   int j = threadIdx.y;
   int k;
-  bool first = true;
   float result1 = 0.0f, result2 = 0.0f;
   while (base_j < n) {
-    j = threadIdx.y;
     __syncthreads();
     k = base_j + j;
     q_shared[j] = (k < n) ? q[k*incq] : 0.0f;
-    if (first) {
-      k = base_i + i;
-      p1_shared[i] = (0 <= k && k < m) ? p[k*incp] : 0.0f;
-      k = m + base_i + i;
-      p2_shared[i] = (0 <= k && k < m) ? p[k*incp] : 0.0f;
+
+    k = base_i + i;
+    if (k < m) {
+      if (k >= 0) {
+        p_shared[i] = p[k*incp];
+      } else {
+        p_shared[i] = p[m + k*incp];
+      }
     } else {
-      p1_shared[i] = p1_shared[i - offset_i];
-      p2_shared[i] = p2_shared[i - offset_i];
+      p_shared[i] = 0.0f;
     }
-    k = base_i + i - offset_i;
-    p1_shared[i - offset_i] = (0 <= k && k < m) ? p[k*incp] : 0.0f;
-    k = m + base_i + i - offset_i;
-    p2_shared[i - offset_i] = (0 <= k && k < m) ? p[k*incp] : 0.0f;
+
+    k = base_i + i - blockDim.y;
+    if (k < m) {
+      if (k >= 0) {
+        p_shared[i - blockDim.y] = p[k*incp];
+      } else {
+        p_shared[i - blockDim.y] = p[m + k*incp];
+      }
+    } else {
+      p_shared[i - blockDim.y] = 0.0f;
+    }
     __syncthreads();
 
-    for (j = 0; j < blockDim.y; ++j) {
-      if (0 <= base_i + i - j) {
-        result1 += p1_shared[i - j]*q_shared[j];
+    for (k = 0; k < blockDim.y; ++k) {
+      if (0 <= base_i + i - k) {
+        result1 += p_shared[i - k]*q_shared[k];
       } else {
-        result2 += p2_shared[i - j]*q_shared[j];
+        result2 += p_shared[i - k]*q_shared[k];        
       }
     }
+
     base_i -= blockDim.y;
     base_j += blockDim.y;
-    first = false;
   }
 
   i = threadIdx.y + blockIdx.y*blockDim.y;
@@ -276,7 +281,7 @@ void convolve_v4(const int m, const int n, const float* p, const int incp,
   }
   dim3 block(1, BLOCK_SIZE);
   dim3 grid(1, (m1 + block.y - 1)/block.y);
-  size_t shared = 5*block.y*sizeof(float);
+  size_t shared = 3*block.y*sizeof(float);
   kernel_convolve_v4<<<grid,block,shared>>>(m1, n1, p1, incp1, q1, incq1, r, incr);
 }
 
