@@ -123,6 +123,65 @@ __global__ void kernel_convolve_v3(const int m, const int n, const float* p,
   }
 }
 
+__global__ void kernel_convolve_v4(const int m, const int n, const float* p,
+    const int incp, const float* q, const int incq, float* r,
+    const int incr) {
+  /* shared memory */
+  extern __shared__ float shared[];
+  float* q_shared = shared;
+  float* p1_shared = q_shared + 2*blockDim.y;  // permits -ve indices
+  float* p2_shared = p1_shared + 2*blockDim.y; // permits -ve indices
+
+  /* element of r for which thread is responsible */
+  int base_i = blockIdx.y*blockDim.y;
+  int base_j = 0;
+  int offset_i = blockDim.y;
+  int i = threadIdx.y;
+  int j = threadIdx.y;
+  int k;
+  bool first = true;
+  float result1 = 0.0f, result2 = 0.0f;
+  while (base_j < n) {
+    j = threadIdx.y;
+    __syncthreads();
+    k = base_j + j;
+    q_shared[j] = (k < n) ? q[k*incq] : 0.0f;
+    if (first) {
+      k = base_i + i;
+      p1_shared[i] = (0 <= k && k < m) ? p[k*incp] : 0.0f;
+      k = m + base_i + i;
+      p2_shared[i] = (0 <= k && k < m) ? p[k*incp] : 0.0f;
+    } else {
+      p1_shared[i] = p1_shared[i - offset_i];
+      p2_shared[i] = p2_shared[i - offset_i];
+    }
+    k = base_i + i - offset_i;
+    p1_shared[i - offset_i] = (0 <= k && k < m) ? p[k*incp] : 0.0f;
+    k = m + base_i + i - offset_i;
+    p2_shared[i - offset_i] = (0 <= k && k < m) ? p[k*incp] : 0.0f;
+    __syncthreads();
+
+    for (j = 0; j < blockDim.y; ++j) {
+      if (0 <= base_i + i - j) {
+        result1 += p1_shared[i - j]*q_shared[j];
+      } else {
+        result2 += p2_shared[i - j]*q_shared[j];
+      }
+    }
+    base_i -= blockDim.y;
+    base_j += blockDim.y;
+    first = false;
+  }
+
+  i = threadIdx.y + blockIdx.y*blockDim.y;
+  if (i < m) {
+    r[i] = result1;
+    if (i < n - 1) {
+      r[i + m] = result2;
+    }
+  }
+}
+
 void convolve_v0(const int m, const int n, const float* p, const int incp,
     const float* q, const int incq, float* r, const int incr) {
   const float *p1 = p, *q1 = q;
@@ -199,6 +258,26 @@ void convolve_v3(const int m, const int n, const float* p, const int incp,
   dim3 grid(1, (m1 + block.y - 1)/block.y);
   size_t shared = block.x*block.y*sizeof(float);
   kernel_convolve_v3<<<grid,block,shared>>>(m1, n1, p1, incp1, q1, incq1, r, incr);
+}
+
+void convolve_v4(const int m, const int n, const float* p, const int incp,
+    const float* q, const int incq, float* r, const int incr) {
+  const float *p1 = p, *q1 = q;
+  int incp1 = incp, incq1 = incq;
+  int m1 = m, n1 = n;
+  if (n > m) {
+    /* swap to put largest vector on the left */
+    p1 = q;
+    q1 = p;
+    incp1 = incq;
+    incq1 = incp;
+    m1 = n;
+    n1 = m;
+  }
+  dim3 block(1, BLOCK_SIZE);
+  dim3 grid(1, (m1 + block.y - 1)/block.y);
+  size_t shared = 5*block.y*sizeof(float);
+  kernel_convolve_v4<<<grid,block,shared>>>(m1, n1, p1, incp1, q1, incq1, r, incr);
 }
 
 }
