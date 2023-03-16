@@ -55,19 +55,17 @@ __global__ void kernel_convolve_v2(const int m, const int n, const float* p,
   int i = threadIdx.y + blockIdx.y*blockDim.y;
 
   float result1 = 0.0f, result2 = 0.0f;
-  for (int base = 0; base < n; base += blockDim.y) {
+  for (int base_j = 0; base_j < n; base_j += blockDim.y) {
     int j = threadIdx.y;
     __syncthreads();
-    q_shared[j] = (base + j < n) ? q[(base + j)*incq] : 0.0f;
+    q_shared[j] = q[((base_j + j + n) % n)*incq];
     __syncthreads();
 
-    if (i < m) {
-      for (j = 0; j < blockDim.y; ++j) {
-        if (0 <= i - base - j) {
-          result1 += p[(i - base - j)*incp]*q_shared[j];
-        } else {
-          result2 += p[(m + i - base - j)*incp]*q_shared[j];
-        }
+    for (j = 0; j < blockDim.y; ++j) {
+      if (0 <= i - base_j - j) {
+        result1 += p[(i - base_j - j)*incp]*q_shared[j];
+      } else {
+        result2 += p[(m + i - base_j - j)*incp]*q_shared[j];
       }
     }
   }
@@ -91,19 +89,17 @@ __global__ void kernel_convolve_v3(const int m, const int n, const float* p,
   int i = threadIdx.y + blockIdx.y*blockDim.y;
 
   float result1 = 0.0f, result2 = 0.0f;
-  for (int base = 0; base < n; base += warpSize*blockDim.y) {
+  for (int base_j = 0; base_j < n; base_j += warpSize*blockDim.y) {
     int j = threadIdx.y*warpSize + threadIdx.x;
     __syncthreads();
-    q_shared[j] = (base + j < n) ? q[(base + j)*incq] : 0.0f;
+    q_shared[j] = q[((base_j + j + n) % n)*incq];
     __syncthreads();
 
-    if (i < m) {
-      for (j = threadIdx.x; j < warpSize*blockDim.y; j += warpSize) {
-        if (0 <= i - base - j) {
-          result1 += p[(i - base - j)*incp]*q_shared[j];
-        } else {
-          result2 += p[(m + i - base - j)*incp]*q_shared[j];
-        }
+    for (j = threadIdx.x; j < warpSize*blockDim.y; j += warpSize) {
+      if (0 <= i - base_j - j) {
+        result1 += p[(i - base_j - j)*incp]*q_shared[j];
+      } else {
+        result2 += p[(m + i - base_j - j)*incp]*q_shared[j];
       }
     }
   }
@@ -132,50 +128,24 @@ __global__ void kernel_convolve_v4(const int m, const int n, const float* p,
   float* p_shared = q_shared + 2*blockDim.y;  // permits -ve indices
 
   /* element of r for which thread is responsible */
-  int base_i = blockIdx.y*blockDim.y;
-  int base_j = 0;
   int i = threadIdx.y;
   int j = threadIdx.y;
-  int k;
   float result1 = 0.0f, result2 = 0.0f;
-  while (base_j < n) {
+  for (int base_i = blockIdx.y*blockDim.y, base_j = 0; base_j < n;
+      base_i -= blockDim.y, base_j += blockDim.y) {
     __syncthreads();
-    k = base_j + j;
-    q_shared[j] = (k < n) ? q[k*incq] : 0.0f;
-
-    k = base_i + i;
-    if (k < m) {
-      if (k >= 0) {
-        p_shared[i] = p[k*incp];
-      } else {
-        p_shared[i] = p[m + k*incp];
-      }
-    } else {
-      p_shared[i] = 0.0f;
-    }
-
-    k = base_i + i - blockDim.y;
-    if (k < m) {
-      if (k >= 0) {
-        p_shared[i - blockDim.y] = p[k*incp];
-      } else {
-        p_shared[i - blockDim.y] = p[m + k*incp];
-      }
-    } else {
-      p_shared[i - blockDim.y] = 0.0f;
-    }
+    q_shared[j] = q[((base_j + j + n) % n)*incq];
+    p_shared[i] = p[((base_i + i + m) % m)*incp];
+    p_shared[i - blockDim.y] = p[((base_i + i + m - blockDim.y) % m)*incp];
     __syncthreads();
 
-    for (k = 0; k < blockDim.y; ++k) {
+    for (int k = 0; k < blockDim.y; ++k) {
       if (0 <= base_i + i - k) {
         result1 += p_shared[i - k]*q_shared[k];
       } else {
         result2 += p_shared[i - k]*q_shared[k];        
       }
     }
-
-    base_i -= blockDim.y;
-    base_j += blockDim.y;
   }
 
   i = threadIdx.y + blockIdx.y*blockDim.y;
