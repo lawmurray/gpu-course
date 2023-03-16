@@ -10,7 +10,7 @@ int main(const int argc, const char *argv[]) {
   /* initialize */
   int device = cuda_init(1);
 
-  const int m = 65536, n = 65536;
+  const int m = 65536, n = 65536, reps = 100;
   float *p, *q, *r_v0, *r_v1, *r_v2, *r_v3, *r_v4;
   
   cudaMallocManaged((void**)&p, m*sizeof(float), cudaMemAttachGlobal);
@@ -52,7 +52,9 @@ int main(const int argc, const char *argv[]) {
   /* v0 */
   cudaDeviceSynchronize();
   gettimeofday(&s, NULL);
-  convolve_v0(m, n, p, 1, q, 1, r_v0, 1);
+  for (int k = 0; k < reps; ++k) {
+    convolve_v0(m, n, p, 1, q, 1, r_v0, 1);
+  }
   cudaDeviceSynchronize();
   gettimeofday(&e, NULL);
   int elapsed_v0 = (e.tv_sec - s.tv_sec)*1e6 + (e.tv_usec - s.tv_usec);
@@ -60,7 +62,9 @@ int main(const int argc, const char *argv[]) {
   /* v1 */
   cudaDeviceSynchronize();
   gettimeofday(&s, NULL);
-  convolve_v1(m, n, p, 1, q, 1, r_v1, 1);
+  for (int k = 0; k < reps; ++k) {
+    convolve_v1(m, n, p, 1, q, 1, r_v1, 1);
+  }
   cudaDeviceSynchronize();
   gettimeofday(&e, NULL);
   int elapsed_v1 = (e.tv_sec - s.tv_sec)*1e6 + (e.tv_usec - s.tv_usec);
@@ -68,7 +72,9 @@ int main(const int argc, const char *argv[]) {
   /* v2 */
   cudaDeviceSynchronize();
   gettimeofday(&s, NULL);
-  convolve_v2(m, n, p, 1, q, 1, r_v2, 1);
+  for (int k = 0; k < reps; ++k) {
+    convolve_v2(m, n, p, 1, q, 1, r_v2, 1);
+  }
   cudaDeviceSynchronize();
   gettimeofday(&e, NULL);
   int elapsed_v2 = (e.tv_sec - s.tv_sec)*1e6 + (e.tv_usec - s.tv_usec);
@@ -76,7 +82,9 @@ int main(const int argc, const char *argv[]) {
   /* v3 */
   cudaDeviceSynchronize();
   gettimeofday(&s, NULL);
-  convolve_v3(m, n, p, 1, q, 1, r_v3, 1);
+  for (int k = 0; k < reps; ++k) {
+    convolve_v3(m, n, p, 1, q, 1, r_v3, 1);
+  }
   cudaDeviceSynchronize();
   gettimeofday(&e, NULL);
   int elapsed_v3 = (e.tv_sec - s.tv_sec)*1e6 + (e.tv_usec - s.tv_usec);
@@ -84,7 +92,9 @@ int main(const int argc, const char *argv[]) {
   /* v4 */
   cudaDeviceSynchronize();
   gettimeofday(&s, NULL);
-  convolve_v4(m, n, p, 1, q, 1, r_v4, 1);
+  for (int k = 0; k < reps; ++k) {
+    convolve_v4(m, n, p, 1, q, 1, r_v4, 1);
+  }
   cudaDeviceSynchronize();
   gettimeofday(&e, NULL);
   int elapsed_v4 = (e.tv_sec - s.tv_sec)*1e6 + (e.tv_usec - s.tv_usec);
@@ -101,11 +111,11 @@ int main(const int argc, const char *argv[]) {
   }
 
   /* output results */
-  fprintf(stderr, "v0    %6dus    %0.4f\n", elapsed_v0, sum_v0);
-  fprintf(stderr, "v1    %6dus    %0.4f\n", elapsed_v1, sum_v1);
-  fprintf(stderr, "v2    %6dus    %0.4f\n", elapsed_v2, sum_v2);
-  fprintf(stderr, "v3    %6dus    %0.4f\n", elapsed_v3, sum_v3);
-  fprintf(stderr, "v4    %6dus    %0.4f\n", elapsed_v4, sum_v4);
+  fprintf(stderr, "v0    %6dus    %0.8f\n", elapsed_v0/reps, sum_v0);
+  fprintf(stderr, "v1    %6dus    %0.8f\n", elapsed_v1/reps, sum_v1);
+  fprintf(stderr, "v2    %6dus    %0.8f\n", elapsed_v2/reps, sum_v2);
+  fprintf(stderr, "v3    %6dus    %0.8f\n", elapsed_v3/reps, sum_v3);
+  fprintf(stderr, "v4    %6dus    %0.8f\n", elapsed_v4/reps, sum_v4);
 
   /* clean up */
   cudaFree(p);
